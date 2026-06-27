@@ -1296,7 +1296,7 @@ export default function Pharmacy() {
                           overflow: 'hidden',
                         }}>
                           {/* THIS div does ALL scrolling — horizontal AND vertical */}
-                          <div className="tbl-wrap">
+                          <div className="pos-tbl-scroll">
                             <table className="pos-list-table">
                               <thead>
                                 <tr>
@@ -1331,23 +1331,8 @@ export default function Pharmacy() {
                               </tbody>
                             </table>
                           </div>
-                          {isMobile && (
-                            <div style={{
-                              textAlign:'center',
-                              fontSize:9,
-                              color:'#9AA3B0',
-                              padding:'3px 0 4px',
-                              background:'#fff',
-                              borderTop:'1px solid #F3F4F6',
-                              letterSpacing:0.3,
-                              flexShrink:0
-                            }}>
-                              ← swipe left/right to see all columns →
-                            </div>
-                          )}
                         </div>
                       )}
-                      {/* ===== END POS LIST VIEW FIX ===== */}
                       {/* ===== END POS LIST VIEW FIX ===== */}
 
                       {posView === 'grid' && (
