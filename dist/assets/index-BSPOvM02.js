@@ -49,11 +49,14 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
           justify-content: space-between;
           gap: 12px;
           flex-shrink: 0;
-          -webkit-app-region: drag;
+         -webkit-app-region: drag;
           app-region: drag;
           user-select: none;
         }
-
+     @media(max-width:620px){
+      .tb { padding: 11px 14px; }
+     .tb-time { font-size: 13px; }
+       }
         .tb-dots {
           display: flex;
           gap: 5px;
