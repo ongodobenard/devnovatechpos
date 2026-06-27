@@ -1284,11 +1284,10 @@ export default function Pharmacy() {
                         </div>
                       </div>
 
-                      {posView === 'list' && (
-                        /* KEY FIX: outer container clips, inner div scrolls both X and Y */
-                        <div className="pos-list-outer">
-                          <div className="pos-list-scroll-x">
-                            <table className="pos-list-table">
+                     {posView === 'list' && (
+                 <div className="pos-list-outer">
+                  <div style={{ overflowX: 'scroll', overflowY: 'auto', flex: 1, WebkitOverflowScrolling: 'touch' }}>
+                            <table className="pos-list-table" style={{ minWidth: '650px', width: '100%', borderCollapse: 'collapse' }}>
                               <thead>
                                 <tr>
                                   <th>Product</th>
