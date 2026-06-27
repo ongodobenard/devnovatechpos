@@ -1296,7 +1296,7 @@ export default function Pharmacy() {
                           overflow: 'hidden',
                         }}>
                           {/* THIS div does ALL scrolling — horizontal AND vertical */}
-                          <div className="pos-tbl-scroll">
+                          <div className="tbl-wrap">
                             <table className="pos-list-table">
                               <thead>
                                 <tr>
