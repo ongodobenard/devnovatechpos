@@ -1151,7 +1151,7 @@ export default function Pharmacy() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                   <button onClick={() => isMobile ? setMobileNavOpen(o => !o) : setSidebarOpen(o => !o)}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280', display: 'flex', padding: 3 }}>
-                    <SI d={PATHS.menu} size={16} />
+                    <SI d={PATHS.menu} size={24} />
                   </button>
                   <span style={{ fontSize: 13, fontWeight: 700, color: '#1E3A5F', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: isMobile ? 120 : 300 }}>
                     {NAV.find(n => n.id === tab)?.label || NAV_ADMIN.find(n => n.id === tab)?.label}
