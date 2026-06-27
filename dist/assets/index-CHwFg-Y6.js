@@ -639,7 +639,7 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
         .cat-tab:hover{color:#2B5393;}
         .cat-tab.active{color:#2B5393;border-bottom-color:#2B5393;font-weight:600;}
 
-        .pos-list-table{width:100%;border-collapse:collapse;min-width:520px;}
+        .pos-list-table{width:100%;border-collapse:collapse;min-width:580px;}
         .pos-list-table thead th{background:#F9FAFB;font-size:10px;font-weight:700;color:#9AA3B0;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid #E5E7EB;text-align:left;position:sticky;top:0;z-index:2;white-space:nowrap;}
         .pos-list-table tbody tr{border-bottom:1px solid #F3F4F6;cursor:pointer;transition:background .12s;}
         .pos-list-table tbody tr:hover{background:#EBF2FC;}
@@ -768,6 +768,8 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
         @media(max-width:900px){.pos-right{width:240px;}.chart-grid{grid-template-columns:1fr;}}
         @media(max-width:640px){
           html,body{overflow:auto;}
+           .pnav-item{ font-size: 14px; padding: 10px 15px; gap: 11px; }
+           .pnav-icon svg{ width: 17px; height: 17px; }
           .ptopbar{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;}
           .ptopbar::-webkit-scrollbar{display:none;}
           .pw{padding:0;align-items:flex-start;height:auto;min-height:100vh;}
