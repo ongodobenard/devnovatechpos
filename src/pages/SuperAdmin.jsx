@@ -397,6 +397,8 @@ function SuperAdmin() {
 
         @media (max-width: 640px) {
           html, body { overflow: auto; }
+          .snav-item { font-size: 14px; padding: 10px 15px; gap: 11px; }
+          .snav-icon svg { width: 17px; height: 17px; }
 
           .sw {
             padding: 0;
@@ -567,7 +569,7 @@ function SuperAdmin() {
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280', display: 'flex', padding: 3, flexShrink: 0 }}
                     aria-label="Toggle sidebar"
                   >
-                    <SVGIcon name="menu" size={16} />
+                    <SVGIcon name="menu" size={24} />
                   </button>
                   <span style={{ fontSize: 13, fontWeight: 700, color: '#1E3A5F', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {NAV.find(n => n.id === tab)?.label}

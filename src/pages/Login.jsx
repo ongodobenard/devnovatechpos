@@ -370,7 +370,7 @@ function Login() {
                 </div>
 
                 <div style={{ marginTop: 'auto', paddingTop: 14 }}>
-                  <a href="https://wa.me/254700000000" target="_blank" rel="noreferrer" style={{
+                  <a href="https://wa.me/254796038686" target="_blank" rel="noreferrer" style={{
                     display: 'inline-flex', alignItems: 'center', gap: 6,
                     background: '#25D366', color: '#fff',
                     padding: '7px 14px', borderRadius: 50,
