@@ -860,10 +860,16 @@ export default function Pharmacy() {
         /* =====================================================
            POS TABLE HORIZONTAL SCROLL FIX — THE ONLY CHANGE
            ===================================================== */
-        .pos-tbl-scroll{overflow-x:scroll;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;scrollbar-width:thin;scrollbar-color:#2B5393 #E5E7EB;}
+        .pos-tbl-scroll{overflow-x:scroll;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;scrollbar-width:thin;scrollbar-color:#2B5393 #E5E7EB;padding-bottom:2px;}
         .pos-tbl-scroll::-webkit-scrollbar{height:8px;display:block;}
         .pos-tbl-scroll::-webkit-scrollbar-thumb{background:#2B5393;border-radius:4px;}
         .pos-tbl-scroll::-webkit-scrollbar-track{background:#E5E7EB;border-radius:4px;}
+        @media(max-width:640px){
+          .pos-tbl-scroll{overflow-x:scroll!important;padding-bottom:10px;}
+          .pos-tbl-scroll::-webkit-scrollbar{height:6px!important;display:block!important;}
+          .pos-tbl-scroll::-webkit-scrollbar-thumb{background:#2B5393!important;border-radius:4px!important;}
+          .pos-tbl-scroll::-webkit-scrollbar-track{background:#E5E7EB!important;border-radius:4px!important;}
+        }
 
         table.pt{width:100%;border-collapse:collapse;min-width:400px;}
         table.pt th{text-align:left;padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:.7px;color:#9CA3AF;text-transform:uppercase;background:#F9FAFB;border-bottom:1px solid #E5E7EB;white-space:nowrap;}
@@ -1325,8 +1331,23 @@ export default function Pharmacy() {
                               </tbody>
                             </table>
                           </div>
+                          {isMobile && (
+                            <div style={{
+                              textAlign:'center',
+                              fontSize:9,
+                              color:'#9AA3B0',
+                              padding:'3px 0 4px',
+                              background:'#fff',
+                              borderTop:'1px solid #F3F4F6',
+                              letterSpacing:0.3,
+                              flexShrink:0
+                            }}>
+                              ← swipe left/right to see all columns →
+                            </div>
+                          )}
                         </div>
                       )}
+                      {/* ===== END POS LIST VIEW FIX ===== */}
                       {/* ===== END POS LIST VIEW FIX ===== */}
 
                       {posView === 'grid' && (
