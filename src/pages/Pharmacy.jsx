@@ -1031,30 +1031,78 @@ export default function Pharmacy() {
         .period-btn.active{background:#1E3A5F;color:#fff;border-color:#1E3A5F;}
         @media(max-width:1100px){.pstats{grid-template-columns:repeat(2,1fr);}.rep-grid{grid-template-columns:repeat(2,1fr);}.pmod-grid{grid-template-columns:1fr 1fr;}}
         @media(max-width:900px){.pos-right{width:240px;}.chart-grid{grid-template-columns:1fr;}}
-        @media(max-width:640px){
-          html,body{overflow:auto;}
-          .pnav-item{font-size:14px;padding:10px 15px;gap:11px;}
-          .pnav-icon svg{width:17px;height:17px;}
-          .ptopbar{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;}
-          .ptopbar::-webkit-scrollbar{display:none;}
-          .pw{padding:0;align-items:flex-start;height:auto;min-height:100vh;}
-          .pwin{border-radius:0;box-shadow:none;height:100dvh;max-width:100%;}
-          .pnav{display:none!important;}
-          .mob-ovl.open{display:block;}
-          .ptopbar{height:48px;padding:0 10px;}
-          .pcontent{padding:8px 6px;}
-          .pstats{grid-template-columns:repeat(2,1fr);gap:6px;}
-          .pstat{padding:8px 10px;}
-          .pos-wrap{flex-direction:column;height:auto;gap:8px;}
-          .pos-left{height:auto;overflow:visible;}
-          .pos-right{width:100%;position:sticky;top:8px;max-height:70vh;}
-          .pos-list-outer{max-height:340px;}
-          .pmod-grid{grid-template-columns:1fr;}
-          .pmod-grid .pmod-col:last-child{display:none;}
-          .rep-grid{grid-template-columns:1fr 1fr;}
-          .chart-grid{grid-template-columns:1fr;}
-          .ptb-biz-name{display:none;}
-        }
+        /* ── POS TABLE SCROLL FIX (mobile + desktop) ── */
+.pos-tbl-scroll {
+  overflow-x: scroll !important;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: block;
+  width: 100%;
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: #2B5393 #E5E7EB;
+}
+.pos-tbl-scroll::-webkit-scrollbar {
+  height: 8px !important;
+  display: block !important;
+}
+.pos-tbl-scroll::-webkit-scrollbar-thumb {
+  background: #2B5393 !important;
+  border-radius: 4px !important;
+}
+.pos-tbl-scroll::-webkit-scrollbar-track {
+  background: #E5E7EB !important;
+  border-radius: 4px !important;
+}
+
+@media(max-width:640px){
+  html,body{overflow:auto;}
+  .pnav-item{font-size:14px;padding:10px 15px;gap:11px;}
+  .pnav-icon svg{width:17px;height:17px;}
+  .ptopbar{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .ptopbar::-webkit-scrollbar{display:none;}
+  .pw{padding:0;align-items:flex-start;height:auto;min-height:100vh;}
+  .pwin{border-radius:0;box-shadow:none;height:100dvh;max-width:100%;}
+  .pnav{display:none!important;}
+  .mob-ovl.open{display:block;}
+  .ptopbar{height:48px;padding:0 10px;}
+  .pcontent{padding:8px 6px;}
+  .pstats{grid-template-columns:repeat(2,1fr);gap:6px;}
+  .pstat{padding:8px 10px;}
+  .pos-wrap{flex-direction:column;height:auto;gap:8px;}
+  
+  /* CRITICAL FIX: pos-left must NOT be overflow:visible on mobile */
+  .pos-left{height:auto;overflow:hidden;min-width:0;}
+  
+  .pos-right{width:100%;position:sticky;top:8px;max-height:70vh;}
+  .pos-list-outer{max-height:340px;}
+  
+  /* CRITICAL FIX: force horizontal scroll on mobile */
+  .pos-tbl-scroll{
+    overflow-x: scroll !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 12px !important;
+    display: block !important;
+    width: 100% !important;
+  }
+  .pos-tbl-scroll::-webkit-scrollbar{
+    height: 8px !important;
+    display: block !important;
+  }
+  .pos-tbl-scroll::-webkit-scrollbar-thumb{
+    background: #2B5393 !important;
+    border-radius: 4px !important;
+  }
+  .pos-tbl-scroll::-webkit-scrollbar-track{
+    background: #E5E7EB !important;
+  }
+  
+  .pmod-grid{grid-template-columns:1fr;}
+  .pmod-grid .pmod-col:last-child{display:none;}
+  .rep-grid{grid-template-columns:1fr 1fr;}
+  .chart-grid{grid-template-columns:1fr;}
+  .ptb-biz-name{display:none;}
+}
         @media(max-width:480px){.pstats{grid-template-columns:1fr 1fr;}.rep-grid{grid-template-columns:1fr;}}
       `}</style>
 
@@ -1284,55 +1332,49 @@ export default function Pharmacy() {
 
                       {/* ===== POS LIST VIEW — FIXED HORIZONTAL SCROLL ===== */}
                       {posView === 'list' && (
-                        <div style={{
-                          background: '#fff',
-                          borderRadius: 8,
-                          border: '1px solid #E5E7EB',
-                          maxHeight: isMobile ? '340px' : 'calc(100vh - 280px)',
-                          flex: 1,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          minHeight: 0,
-                          overflow: 'hidden',
-                        }}>
-                          {/* THIS div does ALL scrolling — horizontal AND vertical */}
-                          <div className="pos-tbl-scroll">
-                            <table className="pos-list-table">
-                              <thead>
-                                <tr>
-                                  <th style={{ minWidth: 180 }}>Product</th>
-                                  <th style={{ minWidth: 110 }}>Category</th>
-                                  <th style={{ minWidth: 110 }}>Price</th>
-                                  <th style={{ minWidth: 90 }}>Stock</th>
-                                  <th style={{ minWidth: 50 }}></th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {posProducts.length === 0
-                                  ? <tr><td colSpan={5} style={{ textAlign: 'center', color: '#9AA3B0', padding: 18 }}>No products found</td></tr>
-                                  : posProducts.map(p => (
-                                    <tr key={p.id} className={p.stock_quantity < 1 ? 'out-row' : ''} onClick={() => addToCart(p)}>
-                                      <td><div style={{ fontWeight: 600, color: '#1E3A5F', fontSize: 11 }}>{p.name}</div><div style={{ fontSize: 9, color: '#9AA3B0' }}>{p.generic_name || '—'}</div></td>
-                                      <td style={{ fontSize: 10, color: '#9AA3B0' }}>{p.category || '—'}</td>
-                                      <td style={{ fontWeight: 700, color: '#2B5393', fontSize: 11 }}>{fmtKES(p.selling_price)}</td>
-                                      <td>
-                                        <span style={{ display: 'inline-flex', alignItems: 'center', padding: '1px 7px', borderRadius: 999, fontSize: 9, fontWeight: 600, background: p.stock_quantity < 1 ? '#FEF2F2' : Number(p.stock_quantity) <= Number(p.reorder_level) ? '#FFF7ED' : '#F0FDF4', color: p.stock_quantity < 1 ? '#DC2626' : Number(p.stock_quantity) <= Number(p.reorder_level) ? '#EA580C' : '#16A34A' }}>
-                                          {p.stock_quantity < 1 ? 'Out' : `${p.stock_quantity} ${p.unit || ''}`}
-                                        </span>
-                                      </td>
-                                      <td>
-                                        <button disabled={p.stock_quantity < 1} onClick={e => { e.stopPropagation(); addToCart(p) }}
-                                          style={{ width: 24, height: 24, borderRadius: 4, background: p.stock_quantity < 1 ? '#E2E6EA' : '#2B5393', border: 'none', cursor: p.stock_quantity < 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 'auto' }}>
-                                          <SI d={PATHS.plus} size={11} color="#fff" />
-                                        </button>
-                                      </td>
-                                    </tr>
-                                  ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      )}
+  <div style={{
+    background: '#fff',
+    borderRadius: 8,
+    border: '1px solid #E5E7EB',
+    maxHeight: isMobile ? '340px' : 'calc(100vh - 280px)',
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    minHeight: 0,
+    overflow: 'hidden',   /* container clips */
+    minWidth: 0,
+    width: '100%',
+  }}>
+    {/* THIS div does ALL scrolling — horizontal AND vertical */}
+    <div
+      className="pos-tbl-scroll"
+      style={{
+        overflow: 'scroll',          /* fallback */
+        overflowX: 'scroll',
+        overflowY: 'auto',
+        WebkitOverflowScrolling: 'touch',
+        display: 'block',
+        width: '100%',
+        maxHeight: isMobile ? '340px' : 'calc(100vh - 280px)',
+      }}
+    >
+      <table className="pos-list-table">
+        <thead>
+          <tr>
+            <th style={{ minWidth: 180 }}>Product</th>
+            <th style={{ minWidth: 110 }}>Category</th>
+            <th style={{ minWidth: 110 }}>Price</th>
+            <th style={{ minWidth: 90 }}>Stock</th>
+            <th style={{ minWidth: 50 }}></th>
+          </tr>
+        </thead>
+        <tbody>
+          {/* ... your existing rows ... */}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
                       {/* ===== END POS LIST VIEW FIX ===== */}
 
                       {posView === 'grid' && (
