@@ -256,21 +256,23 @@ function Login() {
             padding: 0;
             align-items: flex-start;
           }
-          .lc {
-            border-radius: 0;
-            box-shadow: none;
-            max-height: none;
-            overflow: visible;
-          }
+      .lc {
+      border-radius: 0;
+      box-shadow: none;
+      max-height: none;
+      overflow: visible;
+      min-height: 100vh;
+      }
           .mc {
             flex-direction: column;
             overflow: visible;
           }
           .rp {
-            order: 1;
-            flex: none;
-            border-left: none;
-            padding: 20px 16px;
+             order: 1;
+             flex: none;
+             border-left: none;
+             padding: 28px 16px 32px;
+             min-height: 420px;
           }
           .lp {
             order: 2;
