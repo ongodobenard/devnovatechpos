@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost/devnovatechpos/api',
+    baseURL: 'https://pos.devnovatech.co.ke/backend/api',
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
