@@ -775,6 +775,10 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
         @media(max-width:900px){.pos-right{width:240px;}.chart-grid{grid-template-columns:1fr;}}
         @media(max-width:640px){
           html,body{overflow:auto;}
+           .pos-list-scroll-x::-webkit-scrollbar,
+           div[style*="overflowX"]::-webkit-scrollbar { height: 8px !important; display: block !important; }
+           div[style*="overflowX"]::-webkit-scrollbar-thumb { background: #2B5393 !important; border-radius: 4px !important; }
+           div[style*="overflowX"]::-webkit-scrollbar-track { background: #E5E7EB !important; }
            .pnav-item{ font-size: 14px; padding: 10px 15px; gap: 11px; }
            .pnav-icon svg{ width: 17px; height: 17px; }
           .ptopbar{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;}
