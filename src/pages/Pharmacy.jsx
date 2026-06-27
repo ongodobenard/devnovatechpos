@@ -863,7 +863,7 @@ export default function Pharmacy() {
 
         /* POS list specific scroll fix */
         .pos-list-outer{flex:1;overflow:hidden;background:#fff;border-radius:8px;border:1px solid #E5E7EB;display:flex;flex-direction:column;min-height:0;}
-        .pos-list-scroll-x{overflow-x:auto;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;}
+        .pos-list-scroll-x{overflow-x:scroll;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;scroll-behavior:smooth;}
         .pos-list-scroll-x::-webkit-scrollbar{width:4px;height:8px;display:block;}
         .pos-list-scroll-x::-webkit-scrollbar-thumb{background:#9CA3AF;border-radius:4px;}
         .pos-list-scroll-x::-webkit-scrollbar-track{background:#F3F4F6;}
@@ -905,7 +905,7 @@ export default function Pharmacy() {
         .cat-tab:hover{color:#2B5393;}
         .cat-tab.active{color:#2B5393;border-bottom-color:#2B5393;font-weight:600;}
 
-        .pos-list-table{width:100%;border-collapse:collapse;min-width:580px;}
+        .pos-list-table{width:100%;border-collapse:collapse;min-width:650px;}
         .pos-list-table thead th{background:#F9FAFB;font-size:10px;font-weight:700;color:#9AA3B0;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid #E5E7EB;text-align:left;position:sticky;top:0;z-index:2;white-space:nowrap;}
         .pos-list-table tbody tr{border-bottom:1px solid #F3F4F6;cursor:pointer;transition:background .12s;}
         .pos-list-table tbody tr:hover{background:#EBF2FC;}
@@ -1265,10 +1265,10 @@ export default function Pharmacy() {
                 {tab === 'pos' && (
                   <div className="pos-wrap" style={{ height: isMobile ? 'auto' : 'calc(100vh - 168px)' }}>
                     <div className="pos-left">
-                      <div style={{ background: '#fff', borderRadius: 7, border: '1px solid #E5E7EB', padding: '7px 9px', display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
-                        <div style={{ position: 'relative' }}>
+                      <div style={{ background: '#fff', borderRadius: 7, border: '1px solid #E5E7EB', padding: '7px 9px', display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0, overflow: 'visible', minWidth: 0 }}>
+                        <div style={{ position: 'relative', minWidth: 0, width: '100%' }}>
                           <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><SI d={PATHS.search} size={12} color="#9AA3B0" /></span>
-                          <input style={{ ...inp, paddingLeft: 28, fontSize: 11 }} placeholder="Search by name, generic name or barcode…" value={posSearch} onChange={e => setPosSearch(e.target.value)} />
+                          <input style={{ ...inp, paddingLeft: 28, fontSize: 11, width: '100%', minWidth: 0 }} placeholder="Search by name, generic name or barcode…" value={posSearch} onChange={e => setPosSearch(e.target.value)} />
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
                           <div className="cat-bar">
