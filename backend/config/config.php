@@ -3,18 +3,18 @@ if (session_status() === PHP_SESSION_NONE) {
     session_set_cookie_params([
         'lifetime' => 86400,
         'path'     => '/',
-        'secure'   => false,
+        'secure'   => true,
         'httponly' => true,
         'samesite' => 'None',
     ]);
     session_start();
 }
 
-define('ENVIRONMENT', 'development');
+define('ENVIRONMENT', 'production');
 define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'devnovatechpos');
+define('DB_USER', 'careveek_devnovatechpos');
+define('DB_PASS', 'Nozarh"98B');
+define('DB_NAME', 'careveek_devnovatechpos');
 define('SITE_NAME', 'DevnovaTech POS');
 define('JWT_SECRET', 'devnovatechpos_secret_key_2026');
 
@@ -34,7 +34,7 @@ function create_db_connection(): mysqli {
 $conn = create_db_connection();
 
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: http://localhost:5173');
+header('Access-Control-Allow-Origin: https://pos.devnovatech.co.ke');
 header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
