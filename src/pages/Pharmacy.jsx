@@ -1285,44 +1285,51 @@ export default function Pharmacy() {
                       </div>
 
                      {posView === 'list' && (
-                 <div className="pos-list-outer">
-                  <div style={{ overflowX: 'scroll', overflowY: 'auto', flex: 1, height: '100%', WebkitOverflowScrolling: 'touch', display: 'block' }}>
-                            <table className="pos-list-table" style={{ minWidth: '650px', width: '100%', borderCollapse: 'collapse' }}>
-                              <thead>
-                                <tr>
-                                  <th>Product</th>
-                                  <th>Category</th>
-                                  <th>Price</th>
-                                  <th>Stock</th>
-                                  <th></th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {posProducts.length === 0
-                                  ? <tr><td colSpan={5} style={{ textAlign: 'center', color: '#9AA3B0', padding: 18 }}>No products found</td></tr>
-                                  : posProducts.map(p => (
-                                    <tr key={p.id} className={p.stock_quantity < 1 ? 'out-row' : ''} onClick={() => addToCart(p)}>
-                                      <td><div style={{ fontWeight: 600, color: '#1E3A5F', fontSize: 11 }}>{p.name}</div><div style={{ fontSize: 9, color: '#9AA3B0' }}>{p.generic_name || ';'}</div></td>
-                                      <td style={{ fontSize: 10, color: '#9AA3B0' }}>{p.category || ';'}</td>
-                                      <td style={{ fontWeight: 700, color: '#2B5393', fontSize: 11 }}>{fmtKES(p.selling_price)}</td>
-                                      <td>
-                                        <span style={{ display: 'inline-flex', alignItems: 'center', padding: '1px 7px', borderRadius: 999, fontSize: 9, fontWeight: 600, background: p.stock_quantity < 1 ? '#FEF2F2' : Number(p.stock_quantity) <= Number(p.reorder_level) ? '#FFF7ED' : '#F0FDF4', color: p.stock_quantity < 1 ? '#DC2626' : Number(p.stock_quantity) <= Number(p.reorder_level) ? '#EA580C' : '#16A34A' }}>
-                                          {p.stock_quantity < 1 ? 'Out' : `${p.stock_quantity} ${p.unit || ''}`}
-                                        </span>
-                                      </td>
-                                      <td>
-                                        <button disabled={p.stock_quantity < 1} onClick={e => { e.stopPropagation(); addToCart(p) }}
-                                          style={{ width: 24, height: 24, borderRadius: 4, background: p.stock_quantity < 1 ? '#E2E6EA' : '#2B5393', border: 'none', cursor: p.stock_quantity < 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 'auto' }}>
-                                          <SI d={PATHS.plus} size={11} color="#fff" />
-                                        </button>
-                                      </td>
-                                    </tr>
-                                  ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      )}
+  <div style={{ 
+    overflowX: 'scroll', 
+    overflowY: 'auto', 
+    WebkitOverflowScrolling: 'touch', 
+    background: '#fff', 
+    borderRadius: 8, 
+    border: '1px solid #E5E7EB', 
+    maxHeight: isMobile ? '340px' : 'calc(100vh - 280px)',
+    flex: 1
+  }}>
+    <table className="pos-list-table" style={{ minWidth: '650px', width: '100%', borderCollapse: 'collapse' }}>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {posProducts.length === 0
+          ? <tr><td colSpan={5} style={{ textAlign: 'center', color: '#9AA3B0', padding: 18 }}>No products found</td></tr>
+          : posProducts.map(p => (
+            <tr key={p.id} className={p.stock_quantity < 1 ? 'out-row' : ''} onClick={() => addToCart(p)}>
+              <td><div style={{ fontWeight: 600, color: '#1E3A5F', fontSize: 11 }}>{p.name}</div><div style={{ fontSize: 9, color: '#9AA3B0' }}>{p.generic_name || ';'}</div></td>
+              <td style={{ fontSize: 10, color: '#9AA3B0' }}>{p.category || ';'}</td>
+              <td style={{ fontWeight: 700, color: '#2B5393', fontSize: 11 }}>{fmtKES(p.selling_price)}</td>
+              <td>
+                <span style={{ display: 'inline-flex', alignItems: 'center', padding: '1px 7px', borderRadius: 999, fontSize: 9, fontWeight: 600, background: p.stock_quantity < 1 ? '#FEF2F2' : Number(p.stock_quantity) <= Number(p.reorder_level) ? '#FFF7ED' : '#F0FDF4', color: p.stock_quantity < 1 ? '#DC2626' : Number(p.stock_quantity) <= Number(p.reorder_level) ? '#EA580C' : '#16A34A' }}>
+                  {p.stock_quantity < 1 ? 'Out' : `${p.stock_quantity} ${p.unit || ''}`}
+                </span>
+              </td>
+              <td>
+                <button disabled={p.stock_quantity < 1} onClick={e => { e.stopPropagation(); addToCart(p) }}
+                  style={{ width: 24, height: 24, borderRadius: 4, background: p.stock_quantity < 1 ? '#E2E6EA' : '#2B5393', border: 'none', cursor: p.stock_quantity < 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 'auto' }}>
+                  <SI d={PATHS.plus} size={11} color="#fff" />
+                </button>
+              </td>
+            </tr>
+          ))}
+      </tbody>
+    </table>
+  </div>
+)}
 
                       {posView === 'grid' && (
                         <div className="pos-grid-wrap">
