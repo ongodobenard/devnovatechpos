@@ -1296,7 +1296,7 @@ export default function Pharmacy() {
                           overflow: 'hidden',
                         }}>
                           {/* THIS div does ALL scrolling — horizontal AND vertical */}
-                          <div className="tbl-wrap" style={{flex:1, overflowY:'auto', maxHeight:'100%'}}>
+                          <div className="pos-tbl-scroll">
                             <table className="pos-list-table">
                               <thead>
                                 <tr>
