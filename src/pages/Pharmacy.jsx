@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { productsAPI, salesAPI, reportsAPI, usersAPI, customersAPI, expensesAPI, categoriesAPI } from '../api/axios'
+import { productsAPI, salesAPI, reportsAPI, usersAPI, customersAPI, expensesAPI } from '../api/axios'
 
 const SI = ({ d, size = 14, color = 'currentColor', stroke = 1.7 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
@@ -35,7 +35,6 @@ const PATHS = {
   scan: 'M3 5h2||M3 12h2||M3 19h2||M9 5v14||M15 5v14||M21 5h-2||M21 12h-2||M21 19h-2',
   hold: 'M18 11V6a2 2 0 00-4 0v5||M14 10V4a2 2 0 00-4 0v2||M10 10.5V6a2 2 0 00-4 0v8||M18 8a2 2 0 114 0v6a8 8 0 01-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 012.83-2.82L8 15',
   returns: 'M1 4v6h6||M3.51 15a9 9 0 100 .49-4.51',
-  drawer: 'M5 3a2 2 0 00-2 2||M19 3a2 2 0 012 2||M21 19a2 2 0 01-2 2||M5 21a2 2 0 01-2-2||M9 3h1||M9 21h1||M14 3h1||M14 21h1||M3 9v1||M21 9v1||M3 14v1||M21 14v1',
   discount: 'M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z',
   calc: 'M4 2h16a2 2 0 012 2v16a2 2 0 01-2 2H4a2 2 0 01-2-2V4a2 2 0 012-2z||M8 6h8||M8 10h2||M14 10h2||M8 14h2||M14 14h2||M8 18h2||M14 18h2',
   edit: 'M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7||M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z',
@@ -57,11 +56,6 @@ const PATHS = {
   user: 'M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2||M12 3a4 4 0 100 8 4 4 0 000-8z',
   lock: 'M19 11H5a2 2 0 00-2 2v7a2 2 0 002 2h14a2 2 0 002-2v-7a2 2 0 00-2-2z||M7 11V7a5 5 0 0110 0v4',
   eye: 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z||M12 9a3 3 0 100 6 3 3 0 000-6z',
-  refresh: 'M23 4v6h-6||M1 20v-6h6||M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15',
-  folder: 'M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z',
-  upload: 'M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4||M17 8l-5-5-5 5||M12 3v12',
-  audit: 'M9 12h6||M9 16h6||M9 8h6||M5 3h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z',
-  download: 'M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4||M7 10l5 5 5-5||M12 15V3',
 }
 
 const NAV_ADMIN = [
@@ -73,13 +67,12 @@ const NAV_ADMIN = [
   { id: 'cashiers', label: 'Cashiers' },
   { id: 'expenses', label: 'Expenses' },
   { id: 'reports', label: 'Reports' },
-  { id: 'audit', label: 'Audit Log' },
   { id: 'settings', label: 'Settings' },
 ]
 
 const NAV_CASHIER = [
   { id: 'pos', label: 'POS / Sales' },
-  { id: 'sales', label: 'My Sales Today' },
+  { id: 'sales', label: 'My Sales' },
   { id: 'customers', label: 'Customers' },
 ]
 
@@ -99,7 +92,7 @@ function playCartSound() {
     o.type = 'sine'
     o.frequency.setValueAtTime(880, ctx.currentTime)
     o.frequency.exponentialRampToValueAtTime(1100, ctx.currentTime + 0.05)
-    g.gain.setValueAtTime(0.7, ctx.currentTime)
+    g.gain.setValueAtTime(0.15, ctx.currentTime)
     g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18)
     o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.18)
   } catch (e) {}
@@ -112,7 +105,7 @@ function BarChart({ data, color = '#2B5393', height = 120 }) {
     <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height, padding: '0 4px' }}>
       {data.map((d, i) => (
         <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, height: '100%', justifyContent: 'flex-end' }}>
-          <div style={{ fontSize: 8, color: '#9CA3AF', textAlign: 'center' }}>{typeof d.value === 'number' && d.value >= 1000 ? (d.value / 1000).toFixed(1) + 'k' : d.value}</div>
+          <div style={{ fontSize: 8, color: '#9CA3AF', textAlign: 'center', wordBreak: 'break-all' }}>{typeof d.value === 'number' && d.value >= 1000 ? (d.value / 1000).toFixed(1) + 'k' : d.value}</div>
           <div style={{ width: '100%', background: color, borderRadius: '3px 3px 0 0', height: `${Math.max(4, (d.value / max) * (height - 30))}px`, transition: 'height 0.4s', opacity: 0.85 }} />
           <div style={{ fontSize: 8, color: '#6B7280', textAlign: 'center', lineHeight: 1.2, maxWidth: 36, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.label}</div>
         </div>
@@ -158,51 +151,6 @@ function DonutChart({ data, size = 100 }) {
   )
 }
 
-// CSV Import helper
-function parseCSV(text) {
-  const lines = text.trim().split('\n')
-  if (lines.length < 2) return []
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase().replace(/\s+/g, '_'))
-  return lines.slice(1).map(line => {
-    const values = []
-    let cur = '', inQ = false
-    for (let ch of line) {
-      if (ch === '"') inQ = !inQ
-      else if (ch === ',' && !inQ) { values.push(cur.trim()); cur = '' }
-      else cur += ch
-    }
-    values.push(cur.trim())
-    const row = {}
-    headers.forEach((h, i) => { row[h] = values[i] !== undefined ? values[i].replace(/^"|"$/g, '').trim() : '' })
-    return row
-  }).filter(r => Object.values(r).some(v => v !== ''))
-}
-
-function mapCSVRow(row) {
-  const get = (...keys) => {
-    for (const k of keys) {
-      const found = Object.keys(row).find(rk => rk.replace(/[\s_]/g, '').toLowerCase() === k.replace(/[\s_]/g, '').toLowerCase())
-      if (found && row[found] !== '') return row[found]
-    }
-    return ''
-  }
-  const vatRaw = get('vat', 'apply_tax', 'tax', 'vat_applicable')
-  const applyTax = vatRaw !== '' && vatRaw !== null && !['0', 'false', 'no', 'n'].includes(vatRaw.toLowerCase())
-  return {
-    name: get('name', 'product_name', 'product'),
-    category: get('category', 'cat'),
-    buying_price: get('buying', 'buying_price', 'cost', 'cost_price') || '0',
-    selling_price: get('selling_price', 'selling', 'price', 'sale_price') || '0',
-    stock_quantity: get('stock_quantity', 'stock', 'qty', 'quantity') || '0',
-    apply_tax: applyTax,
-    expiry_date: get('expiry_date', 'expiry', 'expiration', 'exp_date') || '',
-    generic_name: get('generic_name', 'generic') || '',
-    unit: get('unit', 'units') || '',
-    reorder_level: get('reorder_level', 'reorder') || '10',
-    barcode: get('barcode') || '',
-  }
-}
-
 export default function Pharmacy() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -212,13 +160,13 @@ export default function Pharmacy() {
   const bizId = user?.business_id
   const bizName = user?.business_name || 'Pharmacy'
 
-  const [tab, setTab] = useState(() => localStorage.getItem('pos_tab') || (isAdmin ? 'dashboard' : 'pos'))
+  const [tab, setTab] = useState(isAdmin ? 'dashboard' : 'pos')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const [maximized, setMaximized] = useState(false)
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 640)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
   const [time, setTime] = useState(new Date())
 
+  // Products
   const [products, setProducts] = useState([])
   const [loadingProds, setLoadingProds] = useState(true)
   const [prodSearch, setProdSearch] = useState('')
@@ -228,21 +176,7 @@ export default function Pharmacy() {
   const [prodLoading, setProdLoading] = useState(false)
   const [prodError, setProdError] = useState('')
 
-  const csvInputRef = useRef(null)
-  const [csvImporting, setCsvImporting] = useState(false)
-  const [csvFeedback, setCsvFeedback] = useState(null)
-  const [showCsvFeedback, setShowCsvFeedback] = useState(false)
-
-  const [auditLogs, setAuditLogs] = useState([])
-  const [loadingAudit, setLoadingAudit] = useState(false)
-  const [auditFilter, setAuditFilter] = useState('all')
-
-  const [categories, setCategories] = useState([])
-  const [showAddCat, setShowAddCat] = useState(false)
-  const [catForm, setCatForm] = useState({ name: '' })
-  const [catLoading, setCatLoading] = useState(false)
-  const [catError, setCatError] = useState('')
-
+  // POS
   const [cart, setCart] = useState([])
   const [posSearch, setPosSearch] = useState('')
   const [posCat, setPosCat] = useState('all')
@@ -265,17 +199,27 @@ export default function Pharmacy() {
   const [selectedCustomer, setSelectedCustomer] = useState(null)
   const [custPaySearch, setCustPaySearch] = useState('')
 
+  // Sales
   const [sales, setSales] = useState([])
   const [loadingSales, setLoadingSales] = useState(false)
-  const [salesDateFrom, setSalesDateFrom] = useState('')
-  const [salesDateTo, setSalesDateTo] = useState('')
+  const [salesFromDate, setSalesFromDate] = useState('')
+  const [salesToDate, setSalesToDate] = useState('')
 
+  // Return/Reprint
+  const [showReturnModal, setShowReturnModal] = useState(false)
+  const [returnSale, setReturnSale] = useState(null)
+  const [adminPassInput, setAdminPassInput] = useState('')
+  const [adminPassError, setAdminPassError] = useState('')
+  const [pendingReturnSale, setPendingReturnSale] = useState(null)
+  const [showAdminPassModal, setShowAdminPassModal] = useState(false)
+
+  // Stats
+  const [stats, setStats] = useState(null)
+  const [loadingStats, setLoadingStats] = useState(true)
   const [todaySalesList, setTodaySalesList] = useState([])
   const [loadingTodaySales, setLoadingTodaySales] = useState(false)
 
-  const [stats, setStats] = useState(null)
-  const [loadingStats, setLoadingStats] = useState(true)
-
+  // Cashiers
   const [cashiers, setCashiers] = useState([])
   const [loadingCash, setLoadingCash] = useState(false)
   const [showAddCash, setShowAddCash] = useState(false)
@@ -284,6 +228,7 @@ export default function Pharmacy() {
   const [cashError, setCashError] = useState('')
   const [cashSuccess, setCashSuccess] = useState('')
 
+  // Customers
   const [customers, setCustomers] = useState([])
   const [loadingCusts, setLoadingCusts] = useState(false)
   const [showAddCust, setShowAddCust] = useState(false)
@@ -294,6 +239,7 @@ export default function Pharmacy() {
   const [custSuccess, setCustSuccess] = useState('')
   const [custSearch, setCustSearch] = useState('')
 
+  // Expenses
   const [expenses, setExpenses] = useState([])
   const [loadingExp, setLoadingExp] = useState(false)
   const [showAddExp, setShowAddExp] = useState(false)
@@ -303,31 +249,25 @@ export default function Pharmacy() {
   const [expSuccess, setExpSuccess] = useState('')
   const [expMonth, setExpMonth] = useState(new Date().toISOString().slice(0, 7))
 
+  // Reports
   const [reportData, setReportData] = useState(null)
   const [loadingReport, setLoadingReport] = useState(false)
-  const [reportPeriod, setReportPeriod] = useState('today')
-  const [reportRange, setReportRange] = useState({
-    from: new Date().toISOString().split('T')[0],
-    to: new Date().toISOString().split('T')[0]
-  })
+  const [reportRange, setReportRange] = useState({ from: new Date().toISOString().split('T')[0], to: new Date().toISOString().split('T')[0] })
 
+  // Settings
   const [settingsForm, setSettingsForm] = useState({ business_name: bizName, phone: '', email: '', address: '', tax_rate: '16', currency: 'KES', receipt_footer: 'Thank you for shopping with us!' })
   const [settingsSaved, setSettingsSaved] = useState(false)
 
-  const [showAdminPwModal, setShowAdminPwModal] = useState(false)
-  const [adminPw, setAdminPw] = useState('')
-  const [adminPwError, setAdminPwError] = useState('')
-  const [pendingRefundSale, setPendingRefundSale] = useState(null)
-  const [reprintReceipt, setReprintReceipt] = useState(null)
+  const today = new Date().toISOString().split('T')[0]
 
   useEffect(() => { const t = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(t) }, [])
   useEffect(() => {
-    const fn = () => { const m = window.innerWidth <= 640; setIsMobile(m); if (!m) setMobileNavOpen(false) }
+    const fn = () => { const m = window.innerWidth <= 768; setIsMobile(m); if (!m) setMobileNavOpen(false) }
     window.addEventListener('resize', fn); return () => window.removeEventListener('resize', fn)
   }, [])
   useEffect(() => {
     if (bizId) {
-      fetchProducts(); fetchCustomers(); fetchCategories()
+      fetchProducts(); fetchCustomers()
       if (isAdmin) { fetchStats(); fetchCashiers(); fetchTodaySales() }
     }
   }, [bizId])
@@ -337,98 +277,22 @@ export default function Pharmacy() {
     if (tab === 'expenses') fetchExpenses()
     if (tab === 'customers') fetchCustomers()
     if (tab === 'dashboard' && isAdmin) { fetchStats(); fetchTodaySales() }
-    if (tab === 'audit' && isAdmin) fetchAuditLogs()
   }, [tab, expMonth, bizId])
-  useEffect(() => { if (tab === 'sales' && bizId) fetchSales() }, [salesDateFrom, salesDateTo])
 
   const pad = n => String(n).padStart(2, '0')
   const fmtT = d => `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
   const fmtD = d => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
   const fmtKES = n => `KES ${Number(n || 0).toLocaleString('en-KE', { minimumFractionDigits: 2 })}`
   const getColor = i => COLORS[i % COLORS.length]
-  const todayStr = () => new Date().toISOString().split('T')[0]
 
   const handleLogout = async () => { await logout(); navigate('/') }
-  const handleNavClick = id => { setTab(id); localStorage.setItem('pos_tab', id); if (isMobile) setMobileNavOpen(false) }
-  const handleMaximize = () => {
-    if (!maximized) { window.moveTo(0, 0); window.resizeTo(screen.availWidth, screen.availHeight); setMaximized(true) }
-    else { window.resizeTo(1300, 800); window.moveTo((screen.availWidth - 1300) / 2, (screen.availHeight - 800) / 2); setMaximized(false) }
-  }
+  const handleNavClick = id => { setTab(id); if (isMobile) setMobileNavOpen(false) }
 
+  // ── Products ──
   const fetchProducts = async () => {
     setLoadingProds(true)
     try { const r = await productsAPI.list(bizId); setProducts(r.data.data || []) }
     catch (e) { console.error(e) } finally { setLoadingProds(false) }
-  }
-
-  const fetchCategories = async () => {
-    try { const r = await categoriesAPI.list(bizId); setCategories(r.data.data || []) }
-    catch (e) { console.error(e) }
-  }
-
-  const handleAddCategory = async e => {
-    e.preventDefault(); setCatLoading(true); setCatError('')
-    try {
-      await categoriesAPI.create({ name: catForm.name, business_id: bizId })
-      setCatForm({ name: '' }); setShowAddCat(false); fetchCategories()
-    } catch (err) { setCatError(err.response?.data?.error || 'Failed') }
-    finally { setCatLoading(false) }
-  }
-
-  const handleDeleteCategory = async id => {
-    if (!window.confirm('Delete this category?')) return
-    try { await categoriesAPI.delete(id); fetchCategories() } catch (e) { console.error(e) }
-  }
-
-  const handleCSVImport = async (e) => {
-    const file = e.target.files[0]
-    if (!file) return
-    if (!file.name.endsWith('.csv')) { alert('Please select a CSV file.'); return }
-    setCsvImporting(true)
-    try {
-      const text = await file.text()
-      const rows = parseCSV(text)
-      if (rows.length === 0) { alert('CSV is empty or invalid.'); setCsvImporting(false); return }
-      let success = 0, failed = 0, errors = []
-      for (let i = 0; i < rows.length; i++) {
-        const mapped = mapCSVRow(rows[i])
-        if (!mapped.name) { failed++; errors.push(`Row ${i + 2}: Missing product name`); continue }
-        try {
-          await productsAPI.add({ ...mapped, business_id: bizId })
-          success++
-        } catch (err) {
-          failed++
-          errors.push(`Row ${i + 2} (${mapped.name}): ${err.response?.data?.error || 'Failed'}`)
-        }
-      }
-      setCsvFeedback({ success, failed, errors, total: rows.length })
-      setShowCsvFeedback(true)
-      if (success > 0) fetchProducts()
-    } catch (err) {
-      alert('Failed to read CSV file.')
-    } finally {
-      setCsvImporting(false)
-      e.target.value = ''
-    }
-  }
-
-  const fetchAuditLogs = async () => {
-    setLoadingAudit(true)
-    try {
-      const r = await salesAPI.listAll(bizId, '', '')
-      const saleLogs = (r.data.data || []).map(s => ({
-        id: `sale-${s.id}`,
-        action: 'SALE',
-        description: `Sale ${s.receipt_number} ; ${fmtKES(s.total_amount)}`,
-        user: s.cashier_name || ';',
-        timestamp: s.created_at,
-        meta: s.payment_method,
-        type: 'sale'
-      }))
-      setAuditLogs(saleLogs)
-    } catch (e) {
-      setAuditLogs([])
-    } finally { setLoadingAudit(false) }
   }
 
   const calcSellingPrice = (buying, margin, applyTax) => {
@@ -464,6 +328,7 @@ export default function Pharmacy() {
     try { await productsAPI.delete(id); fetchProducts() } catch (e) { console.error(e) }
   }
 
+  // ── Cashiers ──
   const fetchCashiers = async () => {
     setLoadingCash(true)
     try { const r = await usersAPI.list(bizId); setCashiers((r.data.data || []).filter(u => u.role === 'cashier')) }
@@ -485,6 +350,7 @@ export default function Pharmacy() {
     try { await usersAPI.delete(id); fetchCashiers() } catch (e) { console.error(e) }
   }
 
+  // ── Customers ──
   const fetchCustomers = async () => {
     setLoadingCusts(true)
     try { const r = await customersAPI.list(bizId); setCustomers(r.data.data || []) }
@@ -511,6 +377,7 @@ export default function Pharmacy() {
     try { await customersAPI.delete(id); fetchCustomers() } catch (e) { console.error(e) }
   }
 
+  // ── Expenses ──
   const fetchExpenses = async () => {
     setLoadingExp(true)
     try { const r = await expensesAPI.list(bizId, expMonth); setExpenses(r.data.data || []) }
@@ -532,36 +399,81 @@ export default function Pharmacy() {
     try { await expensesAPI.delete(id); fetchExpenses() } catch (e) { console.error(e) }
   }
 
+  // ── Reports ──
   const fetchReport = async () => {
     setLoadingReport(true); setReportData(null)
     try {
-      const r = await reportsAPI.fullReport(bizId, reportRange.from, reportRange.to, reportPeriod)
+      const r = await reportsAPI.summary(bizId, reportRange.from, reportRange.to)
       setReportData(r.data.data)
     } catch (e) {
       console.error('Report error:', e)
-      setReportData(null)
+      try {
+        const salesR = await salesAPI.list(bizId, reportRange.from)
+        const sd = salesR?.data?.data || []
+        const total_revenue = sd.reduce((s, x) => s + Number(x.total_amount), 0)
+        const total_tax = sd.reduce((s, x) => s + Number(x.tax || 0), 0)
+        const total_discount = sd.reduce((s, x) => s + Number(x.discount || 0), 0)
+        const by_payment_method = {}
+        sd.forEach(x => { by_payment_method[x.payment_method] = (by_payment_method[x.payment_method] || 0) + Number(x.total_amount) })
+        // Build daily revenue
+        const daily = {}
+        sd.forEach(x => {
+          const d = x.created_at?.split('T')[0] || x.date || ''
+          if (d) daily[d] = (daily[d] || 0) + Number(x.total_amount)
+        })
+        const daily_revenue = Object.entries(daily).map(([date, revenue]) => ({ date, revenue }))
+        setReportData({
+          total_revenue, total_transactions: sd.length, total_tax, total_discount,
+          avg_sale: sd.length ? total_revenue / sd.length : 0,
+          products_sold: 0, by_payment_method, top_products: [], daily_revenue,
+          net_profit: total_revenue - total_tax,
+        })
+      } catch (e2) { console.error(e2) }
     } finally { setLoadingReport(false) }
   }
 
-  const fetchTodaySales = async () => {
-    setLoadingTodaySales(true)
-    try { const r = await salesAPI.list(bizId, todayStr()); setTodaySalesList(r.data.data || []) }
-    catch (e) { console.error(e) } finally { setLoadingTodaySales(false) }
-  }
-
+  // ── Sales (admin: all with filter; cashier: today only own) ──
   const fetchSales = async () => {
     setLoadingSales(true)
     try {
-      let data = []
+      let r
       if (isAdmin) {
-        const r = await salesAPI.listAll(bizId, salesDateFrom, salesDateTo)
-        data = r.data.data || []
+        // fetch all then filter client-side by date range if set
+        r = await salesAPI.list(bizId, salesFromDate || undefined)
       } else {
-        const r = await salesAPI.list(bizId, todayStr())
-        data = (r.data.data || []).filter(s => String(s.cashier_id) === String(user.id))
+        // cashier: always today only
+        r = await salesAPI.list(bizId, today)
+      }
+      let data = r.data.data || []
+      if (!isAdmin) {
+        // Filter to only this cashier's sales today
+        data = data.filter(s => {
+          const sDate = (s.created_at || '').split('T')[0]
+          const isToday = sDate === today
+          const isOwn = String(s.cashier_id) === String(user?.id) || s.cashier_name === user?.name
+          return isToday && isOwn
+        })
+      } else if (isAdmin && salesToDate && salesFromDate) {
+        data = data.filter(s => {
+          const sDate = (s.created_at || '').split('T')[0]
+          return sDate >= salesFromDate && sDate <= salesToDate
+        })
       }
       setSales(data)
     } catch (e) { console.error(e) } finally { setLoadingSales(false) }
+  }
+
+  // Fetch today's sales for dashboard (admin)
+  const fetchTodaySales = async () => {
+    setLoadingTodaySales(true)
+    try {
+      const r = await salesAPI.list(bizId, today)
+      const data = (r.data.data || []).filter(s => {
+        const sDate = (s.created_at || '').split('T')[0]
+        return sDate === today
+      })
+      setTodaySalesList(data)
+    } catch (e) { console.error(e) } finally { setLoadingTodaySales(false) }
   }
 
   const fetchStats = async () => {
@@ -570,6 +482,7 @@ export default function Pharmacy() {
     catch (e) { console.error(e) } finally { setLoadingStats(false) }
   }
 
+  // ── POS ──
   const POS_CATS = ['all', ...new Set(products.map(p => p.category).filter(Boolean))]
   const posProducts = products.filter(p => {
     const mc = posCat === 'all' || p.category === posCat
@@ -646,22 +559,40 @@ export default function Pharmacy() {
     </div>`
   }
 
-  const buildReprintHTML = (sale) => {
-    const ds = new Date(sale.created_at).toLocaleDateString('en-KE', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()
-    const ts = new Date(sale.created_at).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })
+  const buildReceiptHTMLFromSale = (s) => {
+    const items = (s.items || []).map(i =>
+      `<div style="display:flex;justify-content:space-between;font-size:10px;padding:2px 0;">
+        <span style="flex:1">${i.product_name}</span>
+        <span style="min-width:24px;text-align:center">x${i.quantity}</span>
+        <span style="min-width:65px;text-align:right;font-weight:700">KES ${Number(i.subtotal).toLocaleString()}</span>
+      </div>`).join('')
+    const now = new Date(s.created_at)
+    const ds = now.toLocaleDateString('en-KE', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()
+    const ts = now.toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })
+    const total = Number(s.total_amount), disc = Number(s.discount || 0), vat = Number(s.tax || 0)
+    const vatExcl = total - vat
     return `<div style="font-family:'Courier New',monospace;font-size:10px;color:#000;max-width:300px;margin:0 auto;">
       <div style="text-align:center;margin-bottom:6px;">
         <div style="font-size:14px;font-weight:700;">${bizName.toUpperCase()}</div>
-        <div style="font-size:9px;color:#555;">PHARMACY POS ; REPRINT</div>
+        <div style="font-size:9px;color:#555;">PHARMACY POS</div>
         <div style="font-size:9px;color:#555;">${ds} ${ts}</div>
-        <div style="font-size:9px;color:#666;">Receipt: ${sale.receipt_number}</div>
-        <div style="font-size:9px;color:#666;">Cashier: ${sale.cashier_name || ';'}</div>
-        ${sale.customer_name ? `<div style="font-size:9px;color:#333;font-weight:700;">Customer: ${sale.customer_name}</div>` : ''}
+        <div style="font-size:9px;color:#666;">Receipt: ${s.receipt_number || '—'}</div>
+        <div style="font-size:9px;color:#666;">Served by: ${s.cashier_name || '—'}</div>
+        ${s.customer_name ? `<div style="font-size:9px;color:#333;font-weight:700;">Customer: ${s.customer_name}</div>` : ''}
       </div>
       <hr style="border:none;border-top:1px dashed #999;margin:5px 0;"/>
-      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;padding:2px 0;"><span>TOTAL</span><span>KES ${Number(sale.total_amount).toLocaleString()}</span></div>
-      <div style="display:flex;justify-content:space-between;font-size:10px;padding:2px 0;"><span>PAID (${(sale.payment_method || '').toUpperCase()})</span><span>KES ${Number(sale.amount_paid).toLocaleString()}</span></div>
-      <div style="display:flex;justify-content:space-between;font-size:10px;padding:2px 0;"><span>CHANGE</span><span>KES ${Number(sale.change_given).toLocaleString()}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;font-weight:700;padding:2px 0;"><span>ITEM</span><span>QTY</span><span>TOTAL</span></div>
+      <hr style="border:none;border-top:1px solid #000;margin:3px 0;"/>
+      ${items || '<div style="font-size:9px;color:#999;padding:4px 0;">Items not available</div>'}
+      <hr style="border:none;border-top:1px dashed #999;margin:5px 0;"/>
+      ${disc > 0 ? `<div style="display:flex;justify-content:space-between;font-size:10px;padding:2px 0;"><span>DISCOUNT</span><span>-KES ${disc.toLocaleString()}</span></div>` : ''}
+      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;padding:2px 0;"><span>TOTAL DUE</span><span>KES ${total.toLocaleString()}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:700;color:#16A34A;padding:2px 0;"><span>TENDERED (${(s.payment_method||'').toUpperCase()})</span><span>KES ${Number(s.amount_paid||0).toLocaleString()}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:700;color:#2B5393;padding:2px 0;"><span>CHANGE</span><span>KES ${Number(s.change_given||0).toLocaleString()}</span></div>
+      <hr style="border:none;border-top:1px dashed #999;margin:5px 0;"/>
+      <div style="font-size:9px;font-weight:700;margin-bottom:3px;">TAX ANALYSIS</div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;padding:1px 0;"><span>VATABLE EXCL.</span><span>KES ${vatExcl.toLocaleString()}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;padding:1px 0;"><span>VAT 16%</span><span>KES ${vat.toLocaleString()}</span></div>
       <hr style="border:none;border-top:1px dashed #999;margin:5px 0;"/>
       <div style="text-align:center;font-size:9px;color:#666;margin-top:6px;">Thank you for shopping with us!<br/>Powered by DevnovaTech POS</div>
     </div>`
@@ -672,6 +603,58 @@ export default function Pharmacy() {
     w.document.write(`<!DOCTYPE html><html><head><title>Receipt</title><style>body{margin:0;padding:16px;background:#fff;}@media print{body{margin:0;padding:0;}}</style></head><body>${html}</body></html>`)
     w.document.close(); w.focus()
     setTimeout(() => { w.print(); w.close() }, 300)
+  }
+
+  const handleReprintSale = (s) => {
+    const html = buildReceiptHTMLFromSale(s)
+    handlePrintReceipt(html)
+  }
+
+  const handleReturnClick = (s) => {
+    if (!isAdmin) {
+      // Cashier needs admin password
+      setPendingReturnSale(s)
+      setAdminPassInput('')
+      setAdminPassError('')
+      setShowAdminPassModal(true)
+    } else {
+      setReturnSale(s)
+      setShowReturnModal(true)
+    }
+  }
+
+  const handleAdminPassConfirm = async () => {
+    // Validate admin password via API or simple check
+    try {
+      // Try to login with admin credentials to verify password
+      // For now we'll use a simple API call pattern
+      setAdminPassError('')
+      // Call a verify endpoint or just attempt — adjust to your API
+      const r = await usersAPI.verifyAdminPass?.({ business_id: bizId, password: adminPassInput })
+      if (r?.data?.success) {
+        setShowAdminPassModal(false)
+        setReturnSale(pendingReturnSale)
+        setShowReturnModal(true)
+      } else {
+        setAdminPassError('Incorrect admin password')
+      }
+    } catch (e) {
+      setAdminPassError('Incorrect admin password')
+    }
+  }
+
+  const handleConfirmReturn = async () => {
+    if (!returnSale) return
+    try {
+      await salesAPI.return?.({ sale_id: returnSale.id, business_id: bizId })
+      setShowReturnModal(false)
+      setReturnSale(null)
+      fetchSales()
+      if (isAdmin) { fetchStats(); fetchTodaySales() }
+      alert('Return processed successfully')
+    } catch (e) {
+      alert(e.response?.data?.error || 'Return failed')
+    }
   }
 
   const handleSale = async () => {
@@ -704,35 +687,7 @@ export default function Pharmacy() {
     finally { setSaleLoading(false) }
   }
 
-  const handleReturn = (sale) => {
-    if (!isAdmin) {
-      setPendingRefundSale(sale)
-      setAdminPw('')
-      setAdminPwError('')
-      setShowAdminPwModal(true)
-    } else {
-      processReturn(sale, '')
-    }
-  }
-
-  const processReturn = async (sale, adminPassword) => {
-    if (!window.confirm(`Process return for receipt ${sale.receipt_number}? Stock will be restored and revenue reduced.`)) return
-    try {
-      const r = await salesAPI.return(sale.id, adminPassword, bizId)
-      alert(`Return processed. KES ${Number(r.data.amount_returned || sale.total_amount).toLocaleString()} deducted from revenue.`)
-      fetchSales()
-      fetchTodaySales()
-      if (isAdmin) fetchStats()
-    } catch (e) { alert(e.response?.data?.error || 'Return failed') }
-  }
-
-  const handleAdminPwSubmit = async (e) => {
-    e.preventDefault()
-    setShowAdminPwModal(false)
-    await processReturn(pendingRefundSale, adminPw)
-    setAdminPw('')
-  }
-
+  // Calculator
   const calcPress = key => {
     if (key === 'C') { setCalcDisplay('0'); setCalcPrev(null); setCalcOp(null); setCalcNewNum(true); return }
     if (key === '±') { setCalcDisplay(d => String(-parseFloat(d) || 0)); return }
@@ -746,11 +701,13 @@ export default function Pharmacy() {
       if (calcOp === '−') res = a - b
       if (calcOp === '×') res = a * b
       if (calcOp === '÷') res = b !== 0 ? a / b : 0
-      setCalcDisplay(String(parseFloat(res.toFixed(8)))); setCalcPrev(null); setCalcOp(null); setCalcNewNum(true); return
+      setCalcDisplay(String(parseFloat(res.toFixed(8))))
+      setCalcPrev(null); setCalcOp(null); setCalcNewNum(true); return
     }
     if (key === '.') {
       if (calcNewNum) { setCalcDisplay('0.'); setCalcNewNum(false); return }
-      if (!calcDisplay.includes('.')) setCalcDisplay(d => d + '.'); return
+      if (!calcDisplay.includes('.')) setCalcDisplay(d => d + '.')
+      return
     }
     if (key === '⌫') { setCalcDisplay(d => d.length > 1 ? d.slice(0, -1) : '0'); return }
     if (calcNewNum) { setCalcDisplay(key); setCalcNewNum(false) }
@@ -773,6 +730,10 @@ export default function Pharmacy() {
   const lowStock = products.filter(p => Number(p.stock_quantity) <= Number(p.reorder_level))
   const totalExpenses = expenses.reduce((s, e) => s + Number(e.amount), 0)
 
+  // Today's stats from todaySalesList
+  const todayRevenue = todaySalesList.reduce((s, r) => s + Number(r.total_amount), 0)
+  const todayTxnCount = todaySalesList.length
+
   const inp = { border: '1.5px solid #E5E7EB', borderRadius: 6, padding: '8px 10px', fontSize: 12, fontFamily: 'inherit', color: '#111827', background: '#F9FAFB', outline: 'none', width: '100%', boxSizing: 'border-box' }
 
   const expByCategory = EXP_CATS.map(cat => ({
@@ -781,20 +742,22 @@ export default function Pharmacy() {
   })).filter(d => d.value > 0)
 
   const expDonutData = expByCategory.map(d => ({ label: d.label, value: d.value }))
-  const todayTxnCount = todaySalesList.length
-  const todayRevenue = todaySalesList.reduce((s, r) => s + Number(r.total_amount), 0)
 
-  const CASHIER_QA = [
+  // Sales filtered for display
+  const displayedSales = sales
+
+  // Cashier quick actions
+  const cashierQuickActions = [
     { icon: PATHS.scan, label: 'Scan', bg: '#EBF2FC', color: '#2B5393', fn: () => alert('Coming soon') },
-    { icon: PATHS.returns, label: 'Return', bg: '#FEF2F2', color: '#DC2626', fn: () => setTab('sales') },
+    { icon: PATHS.returns, label: 'Return', bg: '#FEF2F2', color: '#DC2626', fn: () => alert('Select a sale from Sales History to return') },
     { icon: PATHS.customers, label: 'Customers', bg: '#EBF2FC', color: '#2B5393', fn: () => setTab('customers') },
     { icon: PATHS.calc, label: 'Calc', bg: '#F0FDF4', color: '#16A34A', fn: () => setShowCalc(true) },
     { icon: PATHS.products, label: 'Products', bg: '#F0FDF4', color: '#16A34A', fn: () => setTab('products') },
   ]
 
-  const ADMIN_QA = [
+  const adminQuickActions = [
     { icon: PATHS.scan, label: 'Scan', bg: '#EBF2FC', color: '#2B5393', fn: () => alert('Coming soon') },
-    { icon: PATHS.returns, label: 'Return', bg: '#FEF2F2', color: '#DC2626', fn: () => setTab('sales') },
+    { icon: PATHS.returns, label: 'Return', bg: '#FEF2F2', color: '#DC2626', fn: () => alert('Select a sale from Sales History to return') },
     { icon: PATHS.sales, label: 'Sales', bg: '#F0FDF4', color: '#16A34A', fn: () => setTab('sales') },
     { icon: PATHS.customers, label: 'Customers', bg: '#EBF2FC', color: '#2B5393', fn: () => setTab('customers') },
     { icon: PATHS.expenses, label: 'Expenses', bg: '#FFF7ED', color: '#EA580C', fn: () => setTab('expenses') },
@@ -803,27 +766,15 @@ export default function Pharmacy() {
     { icon: PATHS.calc, label: 'Calc', bg: '#F0FDF4', color: '#16A34A', fn: () => setShowCalc(true) },
   ]
 
-  const QA_LIST = isAdmin ? ADMIN_QA : CASHIER_QA
-
-  const auditTypeColors = {
-    sale: { bg: '#EFF6FF', color: '#1E40AF', border: '#BFDBFE' },
-    return: { bg: '#FEF2F2', color: '#DC2626', border: '#FECACA' },
-    product: { bg: '#F0FDF4', color: '#16A34A', border: '#BBF7D0' },
-    expense: { bg: '#FFF7ED', color: '#EA580C', border: '#FED7AA' },
-    login: { bg: '#F5F3FF', color: '#7C3AED', border: '#DDD6FE' },
-    import: { bg: '#F0FDF4', color: '#0891B2', border: '#A5F3FC' },
-  }
-
-  const filteredAudit = auditFilter === 'all' ? auditLogs : auditLogs.filter(l => l.type === auditFilter)
+  const quickActions = isAdmin ? adminQuickActions : cashierQuickActions
 
   return (
     <>
       <style>{`
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-        html,body{height:100%;font-family:'Inter',system-ui,sans-serif;background:#E8EAF0;overflow:hidden;}
-        .pw{height:100vh;display:flex;align-items:center;justify-content:center;padding:20px 24px;}
-        .pwin{width:100%;max-width:1100px;height:calc(100vh - 40px);border-radius:10px;overflow:hidden;box-shadow:0 14px 44px rgba(0,0,0,0.18);display:flex;flex-direction:column;background:#F4F5F7;}
-        .ptb{background:#1E3A5F;padding:5px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;user-select:none;min-height:34px;}
+        html,body{height:100%;font-family:'Inter',system-ui,sans-serif;background:#E8EAF0;}
+        .app{display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+        .ptb{background:#1E3A5F;padding:5px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;user-select:none;min-height:32px;}
         .pdots{display:flex;gap:5px;}
         .pdot{width:11px;height:11px;border-radius:50%;border:none;padding:0;cursor:pointer;flex-shrink:0;}
         .prs{height:3px;background:#DC2626;flex-shrink:0;}
@@ -840,7 +791,7 @@ export default function Pharmacy() {
         .pnav-user{display:flex;align-items:center;gap:7px;padding:6px;border-radius:6px;background:rgba(255,255,255,0.05);}
         .pnav-avatar{width:24px;height:24px;border-radius:50%;background:#DC2626;display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:700;flex-shrink:0;}
         .pmain{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;background:#F4F5F7;}
-        .ptopbar{background:#fff;min-height:44px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #E5E7EB;flex-shrink:0;gap:6px;flex-wrap:wrap;}
+        .ptopbar{background:#fff;height:44px;padding:0 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #E5E7EB;flex-shrink:0;gap:6px;}
         .pcontent{flex:1;overflow-y:auto;overflow-x:hidden;padding:12px;}
         .pbar{background:#fff;border-top:1px solid #E5E7EB;padding:4px 12px;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#9CA3AF;flex-shrink:0;}
         .pcard{background:#fff;border-radius:8px;border:1px solid #E5E7EB;overflow:hidden;margin-bottom:12px;}
@@ -848,30 +799,7 @@ export default function Pharmacy() {
         .pstats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
         .pstat{background:#fff;border-radius:8px;border:1px solid #E5E7EB;padding:10px 12px;}
         .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-        .tbl-wrap::-webkit-scrollbar{height:6px;display:block;}
-        .tbl-wrap::-webkit-scrollbar-thumb{background:#9CA3AF;border-radius:4px;}
-        .tbl-wrap::-webkit-scrollbar-track{background:#F3F4F6;}
-        .pos-list-outer{flex:1;overflow:hidden;background:#fff;border-radius:8px;border:1px solid #E5E7EB;display:block;min-height:0;max-height:340px;}
-        .pos-list-scroll-x{overflow-x:scroll;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;scroll-behavior:smooth;}
-        .pos-list-scroll-x::-webkit-scrollbar{width:4px;height:8px;display:block;}
-        .pos-list-scroll-x::-webkit-scrollbar-thumb{background:#9CA3AF;border-radius:4px;}
-        .pos-list-scroll-x::-webkit-scrollbar-track{background:#F3F4F6;}
-
-        /* =====================================================
-           POS TABLE HORIZONTAL SCROLL FIX — THE ONLY CHANGE
-           ===================================================== */
-        .pos-tbl-scroll{overflow-x:scroll;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;scrollbar-width:thin;scrollbar-color:#2B5393 #E5E7EB;padding-bottom:2px;}
-        .pos-tbl-scroll::-webkit-scrollbar{height:8px;display:block;}
-        .pos-tbl-scroll::-webkit-scrollbar-thumb{background:#2B5393;border-radius:4px;}
-        .pos-tbl-scroll::-webkit-scrollbar-track{background:#E5E7EB;border-radius:4px;}
-        @media(max-width:640px){
-          .pos-tbl-scroll{overflow-x:scroll!important;padding-bottom:10px;}
-          .pos-tbl-scroll::-webkit-scrollbar{height:6px!important;display:block!important;}
-          .pos-tbl-scroll::-webkit-scrollbar-thumb{background:#2B5393!important;border-radius:4px!important;}
-          .pos-tbl-scroll::-webkit-scrollbar-track{background:#E5E7EB!important;border-radius:4px!important;}
-        }
-
-        table.pt{width:100%;border-collapse:collapse;min-width:400px;}
+        table.pt{width:100%;border-collapse:collapse;min-width:480px;}
         table.pt th{text-align:left;padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:.7px;color:#9CA3AF;text-transform:uppercase;background:#F9FAFB;border-bottom:1px solid #E5E7EB;white-space:nowrap;}
         table.pt td{padding:8px 12px;font-size:12px;color:#374151;border-bottom:1px solid #F3F4F6;vertical-align:middle;}
         table.pt tr:last-child td{border-bottom:none;}
@@ -884,32 +812,26 @@ export default function Pharmacy() {
         .pbtn-ghost:hover{background:#F3F4F6;}
         .pbtn-danger{padding:5px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #FECACA;background:#FEF2F2;color:#DC2626;transition:background .15s;display:inline-flex;align-items:center;gap:4px;}
         .pbtn-danger:hover{background:#FEE2E2;}
-        .pbtn-orange{padding:5px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #FED7AA;background:#FFF7ED;color:#EA580C;transition:background .15s;display:inline-flex;align-items:center;gap:4px;}
-        .pbtn-orange:hover{background:#FFEDD5;}
-        .pbtn-blue{padding:5px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #BFDBFE;background:#EFF6FF;color:#2B5393;transition:background .15s;display:inline-flex;align-items:center;gap:4px;}
-        .pbtn-blue:hover{background:#DBEAFE;}
-        .btn-import{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:8px;border:2px dashed #2B5393;background:linear-gradient(135deg,#EBF2FC,#F0F7FF);color:#2B5393;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s;width:100%;}
-        .btn-import:hover:not(:disabled){background:linear-gradient(135deg,#DBEAFE,#EBF2FC);border-color:#1E3A5F;transform:translateY(-1px);box-shadow:0 4px 12px rgba(43,83,147,0.15);}
-        .btn-import:disabled{opacity:.6;cursor:not-allowed;transform:none;}
-        .csv-feedback{border-radius:8px;padding:12px 14px;margin-bottom:0;}
-        .csv-feedback.success{background:#F0FDF4;border:1px solid #BBF7D0;}
-        .csv-feedback.partial{background:#FFF7ED;border:1px solid #FED7AA;}
-        .csv-feedback.failed{background:#FEF2F2;border:1px solid #FECACA;}
-        .audit-badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;border:1px solid;}
-        .pos-wrap{display:flex;gap:10px;align-items:flex-start;height:calc(100vh - 120px);}
-        .pos-left{flex:1;display:flex;flex-direction:column;gap:7px;min-width:0;height:100%;overflow:hidden;}
-        .pos-right{width:275px;display:flex;flex-direction:column;flex-shrink:0;height:100%;}
+        .pbtn-warn{padding:5px 9px;border-radius:6px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #FED7AA;background:#FFF7ED;color:#EA580C;transition:background .15s;display:inline-flex;align-items:center;gap:3px;}
+        .pbtn-warn:hover{background:#FFEDD5;}
+        .pos-wrap{display:flex;gap:10px;height:100%;}
+        .pos-left{flex:1;display:flex;flex-direction:column;gap:7px;min-width:0;overflow:hidden;}
+        .pos-right{width:275px;display:flex;flex-direction:column;flex-shrink:0;}
         .cat-bar{display:flex;gap:1px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
         .cat-bar::-webkit-scrollbar{display:none;}
         .cat-tab{padding:4px 10px;white-space:nowrap;font-size:11px;font-weight:500;color:#9AA3B0;cursor:pointer;border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit;transition:all .14s;}
         .cat-tab:hover{color:#2B5393;}
         .cat-tab.active{color:#2B5393;border-bottom-color:#2B5393;font-weight:600;}
-        .pos-list-table{border-collapse:collapse;min-width:700px;width:max-content;}
+        .pos-list-wrap{flex:1;overflow-x:auto;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff;border-radius:8px;border:1px solid #E5E7EB;display:block;width:100%;}
+        .pos-list-wrap::-webkit-scrollbar{width:4px;height:8px;display:block;}
+        .pos-list-wrap::-webkit-scrollbar-thumb{background:#2B5393;border-radius:4px;}
+        .pos-list-wrap::-webkit-scrollbar-track{background:#E5E7EB;border-radius:4px;}
+        .pos-list-table{width:100%;border-collapse:collapse;min-width:560px;}
         .pos-list-table thead th{background:#F9FAFB;font-size:10px;font-weight:700;color:#9AA3B0;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid #E5E7EB;text-align:left;position:sticky;top:0;z-index:2;white-space:nowrap;}
         .pos-list-table tbody tr{border-bottom:1px solid #F3F4F6;cursor:pointer;transition:background .12s;}
         .pos-list-table tbody tr:hover{background:#EBF2FC;}
         .pos-list-table tbody tr.out-row{opacity:.5;cursor:not-allowed;}
-        .pos-list-table tbody td{padding:7px 10px;font-size:11px;color:#374151;vertical-align:middle;}
+        .pos-list-table tbody td{padding:7px 10px;font-size:11px;color:#374151;vertical-align:middle;white-space:nowrap;}
         .pos-grid-wrap{flex:1;overflow-y:auto;}
         .pos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px;align-content:start;}
         .pcard2{background:#fff;border:1px solid #E5E7EB;border-radius:8px;padding:8px;cursor:pointer;transition:all .14s;display:flex;flex-direction:column;gap:3px;position:relative;user-select:none;}
@@ -962,8 +884,7 @@ export default function Pharmacy() {
         .btn-checkout:disabled{opacity:.4;cursor:not-allowed;}
         .qa-wrap{border-top:1px solid #E5E7EB;padding:6px 10px;flex:0 0 auto;}
         .qa-title{font-size:9px;font-weight:600;color:#9AA3B0;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
-        .qa-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;}
-        .qa-grid.admin-qa{grid-template-columns:repeat(4,1fr);}
+        .qa-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;}
         .qa-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px;border-radius:5px;border:1px solid #E2E6EA;background:#F7F8FA;cursor:pointer;font-family:inherit;}
         .qa-btn:hover{border-color:#2B5393;background:#EBF2FC;}
         .qa-icon{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;}
@@ -997,12 +918,13 @@ export default function Pharmacy() {
         .receipt-preview{background:#fff;border:1px solid #E2E6EA;border-radius:8px;padding:10px;font-family:'Courier New',monospace;font-size:10px;color:#000;line-height:1.5;overflow-y:auto;max-height:320px;}
         .rec-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0 14px 14px;}
         .btn-rec{padding:8px;border-radius:6px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;border:none;display:flex;align-items:center;justify-content:center;gap:4px;}
-        .calc-wrap{background:#1A1A2E;border-radius:12px;overflow:hidden;width:min(260px,90vw);}
+        .calc-ovl{position:fixed;inset:0;background:rgba(15,25,40,0.55);display:flex;align-items:center;justify-content:center;z-index:400;padding:16px;}
+        .calc-wrap{background:#1A1A2E;border-radius:12px;overflow:hidden;width:min(280px,90vw);}
         .calc-display{padding:14px 16px;text-align:right;}
         .calc-display .prev{font-size:12px;color:rgba(255,255,255,0.4);min-height:18px;}
-        .calc-display .cur{font-size:clamp(18px,5vw,28px);font-weight:700;color:#fff;word-break:break-all;}
+        .calc-display .cur{font-size:clamp(18px,6vw,28px);font-weight:700;color:#fff;word-break:break-all;}
         .calc-keys{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#0F0F1A;}
-        .calc-key{padding:clamp(10px,3vw,14px) 8px;font-size:clamp(12px,3.5vw,14px);font-weight:500;border:none;cursor:pointer;font-family:inherit;text-align:center;}
+        .calc-key{padding:clamp(10px,3vw,15px) 8px;font-size:clamp(12px,3.5vw,15px);font-weight:500;border:none;cursor:pointer;font-family:inherit;text-align:center;}
         .calc-key.fn{background:#3A3A4E;color:#fff;}
         .calc-key.op{background:#DC2626;color:#fff;}
         .calc-key.eq{background:#16A34A;color:#fff;}
@@ -1023,995 +945,860 @@ export default function Pharmacy() {
         .mob-drawer{position:absolute;left:0;top:0;bottom:0;width:210px;background:#1E3A5F;display:flex;flex-direction:column;}
         .pempty{text-align:center;padding:28px 14px;color:#9AA3B0;font-size:12px;}
         .success-bar{background:#F0FDF4;color:#15803D;padding:7px 12px;font-size:12px;font-weight:600;border-bottom:1px solid #BBF7D0;}
-        .cust-sel-item{display:flex;align-items:center;gap:7px;padding:6px 7px;border-radius:6px;cursor:pointer;border:1px solid #E2E6EA;margin-bottom:4px;}
+        .cust-sel-item{display:flex;align-items:center;gap:7px;padding:6px 7px;border-radius:6px;cursor:pointer;border:1px solid #E2E6EA;margin-bottom:4px;transition:all .14s;}
         .cust-sel-item:hover,.cust-sel-item.selected{border-color:#2B5393;background:#EBF2FC;}
         .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
         .chart-box{background:#fff;border-radius:8px;border:1px solid #E5E7EB;padding:12px;}
-        .period-btn{padding:4px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid #E5E7EB;background:#F9FAFB;color:#4A5568;transition:all .15s;}
-        .period-btn.active{background:#1E3A5F;color:#fff;border-color:#1E3A5F;}
-        @media(max-width:1100px){.pstats{grid-template-columns:repeat(2,1fr);}.rep-grid{grid-template-columns:repeat(2,1fr);}.pmod-grid{grid-template-columns:1fr 1fr;}}
-        @media(max-width:900px){.pos-right{width:240px;}.chart-grid{grid-template-columns:1fr;}}
-        /* ── POS TABLE SCROLL FIX (mobile + desktop) ── */
-.pos-tbl-scroll {
-  overflow-x: scroll !important;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  display: block;
-  width: 100%;
-  flex: 1;
-  scrollbar-width: thin;
-  scrollbar-color: #2B5393 #E5E7EB;
-}
-.pos-tbl-scroll::-webkit-scrollbar {
-  height: 8px !important;
-  display: block !important;
-}
-.pos-tbl-scroll::-webkit-scrollbar-thumb {
-  background: #2B5393 !important;
-  border-radius: 4px !important;
-}
-.pos-tbl-scroll::-webkit-scrollbar-track {
-  background: #E5E7EB !important;
-  border-radius: 4px !important;
-}
-
-@media(max-width:640px){
-  html,body{overflow:auto;}
-  .pnav-item{font-size:14px;padding:10px 15px;gap:11px;}
-  .pnav-icon svg{width:17px;height:17px;}
-  .ptopbar{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;}
-  .ptopbar::-webkit-scrollbar{display:none;}
-  .pw{padding:0;align-items:flex-start;height:auto;min-height:100vh;}
-  .pwin{border-radius:0;box-shadow:none;height:100dvh;max-width:100%;}
-  .pnav{display:none!important;}
-  .mob-ovl.open{display:block;}
-  .ptopbar{height:48px;padding:0 10px;}
-  .pcontent{padding:8px 6px;}
-  .pstats{grid-template-columns:repeat(2,1fr);gap:6px;}
-  .pstat{padding:8px 10px;}
-  .pos-wrap{flex-direction:column;height:auto;gap:8px;}
-  
-  /* CRITICAL FIX: pos-left must NOT be overflow:visible on mobile */
-  .pos-left{height:auto;overflow:hidden;min-width:0;}
-  
-  .pos-right{width:100%;position:sticky;top:8px;max-height:70vh;}
-  .pos-list-outer{max-height:340px;}
-  
-  /* CRITICAL FIX: force horizontal scroll on mobile */
-  .pos-tbl-scroll{
-    overflow-x: scroll !important;
-    -webkit-overflow-scrolling: touch !important;
-    padding-bottom: 12px !important;
-    display: block !important;
-    width: 100% !important;
-  }
-  .pos-tbl-scroll::-webkit-scrollbar{
-    height: 8px !important;
-    display: block !important;
-  }
-  .pos-tbl-scroll::-webkit-scrollbar-thumb{
-    background: #2B5393 !important;
-    border-radius: 4px !important;
-  }
-  .pos-tbl-scroll::-webkit-scrollbar-track{
-    background: #E5E7EB !important;
-  }
-  
-  .pmod-grid{grid-template-columns:1fr;}
-  .pmod-grid .pmod-col:last-child{display:none;}
-  .rep-grid{grid-template-columns:1fr 1fr;}
-  .chart-grid{grid-template-columns:1fr;}
-  .ptb-biz-name{display:none;}
-}
-        @media(max-width:480px){.pstats{grid-template-columns:1fr 1fr;}.rep-grid{grid-template-columns:1fr;}}
+        .ptb-title{color:#90aac8;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .ptb-time{color:#aac4e0;font-size:11px;white-space:nowrap;flex-shrink:0;}
+        @media(max-width:1100px){
+          .pstats{grid-template-columns:repeat(2,1fr);}
+          .rep-grid{grid-template-columns:repeat(2,1fr);}
+          .pmod-grid{grid-template-columns:1fr 1fr;}
+        }
+        @media(max-width:900px){
+          .pos-right{width:240px;}
+          .chart-grid{grid-template-columns:1fr;}
+        }
+        @media(max-width:768px){
+          html,body{overflow:auto;}
+          .app{height:auto;min-height:100dvh;overflow:auto;}
+          .pbody{height:calc(100dvh - 35px - 3px);overflow:hidden;}
+          .pnav{display:none!important;}
+          .mob-ovl.open{display:block;}
+          .ptopbar{height:48px;padding:0 10px;}
+          .pcontent{padding:8px 6px;overflow-y:auto;}
+          .pstats{grid-template-columns:repeat(2,1fr);gap:6px;}
+          .pstat{padding:8px 10px;}
+          .pos-wrap{flex-direction:column;height:auto;gap:8px;}
+          .pos-left{min-width:0;width:100%;overflow:hidden;}
+          .pos-right{width:100%;}
+          .pos-list-wrap{
+            overflow-x:scroll!important;
+            overflow-y:auto!important;
+            -webkit-overflow-scrolling:touch!important;
+            max-height:360px;
+            display:block!important;
+            width:100%!important;
+          }
+          .pos-list-wrap::-webkit-scrollbar{height:8px!important;display:block!important;}
+          .pos-list-wrap::-webkit-scrollbar-thumb{background:#2B5393!important;border-radius:4px!important;}
+          .pos-list-wrap::-webkit-scrollbar-track{background:#E5E7EB!important;}
+          .pmod-grid{grid-template-columns:1fr;}
+          .pmod-grid .pmod-col:last-child{display:none;}
+          .rep-grid{grid-template-columns:1fr 1fr;}
+          .chart-grid{grid-template-columns:1fr;}
+          .pbtn{padding:5px 8px;font-size:10px;gap:3px;}
+          .ptb-title{font-size:9px;}
+          .ptb-time{font-size:9px;}
+          .pos-list-table{min-width:560px!important;}
+          .pos-list-table tbody td{white-space:nowrap!important;}
+        }
+        @media(max-width:480px){
+          .pstats{grid-template-columns:1fr 1fr;}
+          .rep-grid{grid-template-columns:1fr;}
+          .pbtn{font-size:9px;padding:4px 6px;}
+          .ptb-title{font-size:8px;}
+        }
+        @media print{
+          body *{visibility:hidden;}
+          #print-receipt,#print-receipt *{visibility:visible;}
+          #print-receipt{position:fixed;left:0;top:0;width:100%;}
+        }
       `}</style>
 
-      <input ref={csvInputRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={handleCSVImport} />
-
-      <div className="pw">
-        <div className="pwin">
-          <div className="ptb">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div className="pdots">
-                <button className="pdot" style={{ background: '#FF5F57' }} onClick={() => window.close()} />
-                <button className="pdot" style={{ background: '#FFBD2E' }} onClick={() => {}} />
-                <button className="pdot" style={{ background: '#28CA41' }} onClick={handleMaximize} />
-              </div>
-              <span className="ptb-biz-name" style={{ color: '#90aac8', fontSize: 11 }}>DevnovaTech POS ; {bizName}</span>
+      <div className="app">
+        {/* Title Bar */}
+        <div className="ptb">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
+            <div className="pdots" style={{ flexShrink: 0 }}>
+              <button className="pdot" style={{ background: '#FF5F57' }} onClick={() => window.close()} />
+              <button className="pdot" style={{ background: '#FFBD2E' }} />
+              <button className="pdot" style={{ background: '#28CA41' }} />
             </div>
-            <span style={{ color: '#aac4e0', fontSize: isMobile ? 9 : 11 }}>{fmtD(time)} | {fmtT(time)}</span>
+            <span className="ptb-title">DevnovaTech POS — {bizName}</span>
           </div>
-          <div className="prs" />
+          <span className="ptb-time">{fmtD(time)} | {fmtT(time)}</span>
+        </div>
+        <div className="prs" />
 
-          <div className="pbody">
-            <div className="pnav" style={{ width: sidebarOpen ? '185px' : '46px' }}>
-              <div className="pnav-logo">
+        <div className="pbody">
+          {/* Sidebar */}
+          <div className="pnav" style={{ width: sidebarOpen ? '185px' : '46px' }}>
+            <div className="pnav-logo">
+              <div className="pnav-biz-av">{getInitials(bizName)}</div>
+              {sidebarOpen && <div style={{ overflow: 'hidden' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#fff', lineHeight: 1.2 }}>{bizName}</div>
+                <div style={{ fontSize: 8, letterSpacing: 2, color: '#8BAAC8' }}>PHARMACY POS</div>
+              </div>}
+            </div>
+            <div className="pnav-items">
+              {NAV.map(n => (
+                <div key={n.id} className={`pnav-item${tab === n.id ? ' active' : ''}`} onClick={() => setTab(n.id)}>
+                  <span className="pnav-icon"><SI d={PATHS[n.id] || PATHS.dashboard} size={14} color={tab === n.id ? '#fff' : '#8BAAC8'} /></span>
+                  {sidebarOpen && <span>{n.label}</span>}
+                </div>
+              ))}
+            </div>
+            <div className="pnav-foot">
+              <div className="pnav-user">
+                <div className="pnav-avatar">{user?.name?.charAt(0)?.toUpperCase() || 'U'}</div>
+                {sidebarOpen && <>
+                  <div style={{ flex: 1, overflow: 'hidden' }}>
+                    <div style={{ fontSize: 10, color: '#fff', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.name}</div>
+                    <div style={{ fontSize: 9, color: '#8BAAC8', textTransform: 'capitalize' }}>{user?.role}</div>
+                  </div>
+                  <button onClick={handleLogout} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8BAAC8', padding: 2, display: 'flex' }}
+                    onMouseEnter={e => e.currentTarget.style.color = '#DC2626'} onMouseLeave={e => e.currentTarget.style.color = '#8BAAC8'}>
+                    <SI d={PATHS.logout} size={13} />
+                  </button>
+                </>}
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Nav */}
+          <div className={`mob-ovl${mobileNavOpen ? ' open' : ''}`} onClick={() => setMobileNavOpen(false)}>
+            <div className="mob-drawer" onClick={e => e.stopPropagation()}>
+              <div className="pnav-logo" style={{ padding: 12 }}>
                 <div className="pnav-biz-av">{getInitials(bizName)}</div>
-                {sidebarOpen && <div style={{ overflow: 'hidden' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#fff', lineHeight: 1.2 }}>{bizName}</div>
+                <div style={{ flex: 1, overflow: 'hidden' }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{bizName}</div>
                   <div style={{ fontSize: 8, letterSpacing: 2, color: '#8BAAC8' }}>PHARMACY POS</div>
-                </div>}
+                </div>
+                <button onClick={() => setMobileNavOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8BAAC8', display: 'flex', padding: 4 }}>
+                  <SI d={PATHS.close} size={15} />
+                </button>
               </div>
               <div className="pnav-items">
                 {NAV.map(n => (
-                  <div key={n.id} className={`pnav-item${tab === n.id ? ' active' : ''}`} onClick={() => { setTab(n.id); localStorage.setItem('pos_tab', n.id) }}>
+                  <div key={n.id} className={`pnav-item${tab === n.id ? ' active' : ''}`} onClick={() => handleNavClick(n.id)}>
                     <span className="pnav-icon"><SI d={PATHS[n.id] || PATHS.dashboard} size={14} color={tab === n.id ? '#fff' : '#8BAAC8'} /></span>
-                    {sidebarOpen && <span>{n.label}</span>}
+                    <span>{n.label}</span>
                   </div>
                 ))}
               </div>
               <div className="pnav-foot">
                 <div className="pnav-user">
                   <div className="pnav-avatar">{user?.name?.charAt(0)?.toUpperCase() || 'U'}</div>
-                  {sidebarOpen && <>
-                    <div style={{ flex: 1, overflow: 'hidden' }}>
-                      <div style={{ fontSize: 10, color: '#fff', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.name}</div>
-                      <div style={{ fontSize: 9, color: '#8BAAC8', textTransform: 'capitalize' }}>{user?.role}</div>
-                    </div>
-                    <button onClick={handleLogout} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8BAAC8', padding: 2, display: 'flex' }}
-                      onMouseEnter={e => e.currentTarget.style.color = '#DC2626'} onMouseLeave={e => e.currentTarget.style.color = '#8BAAC8'}>
-                      <SI d={PATHS.logout} size={13} />
-                    </button>
-                  </>}
-                </div>
-              </div>
-            </div>
-
-            <div className={`mob-ovl${mobileNavOpen ? ' open' : ''}`} onClick={() => setMobileNavOpen(false)}>
-              <div className="mob-drawer" onClick={e => e.stopPropagation()}>
-                <div className="pnav-logo" style={{ padding: 12 }}>
-                  <div className="pnav-biz-av">{getInitials(bizName)}</div>
                   <div style={{ flex: 1, overflow: 'hidden' }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{bizName}</div>
-                    <div style={{ fontSize: 8, letterSpacing: 2, color: '#8BAAC8' }}>PHARMACY POS</div>
+                    <div style={{ fontSize: 10, color: '#fff', fontWeight: 600 }}>{user?.name}</div>
+                    <div style={{ fontSize: 9, color: '#8BAAC8', textTransform: 'capitalize' }}>{user?.role}</div>
                   </div>
-                  <button onClick={() => setMobileNavOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8BAAC8', display: 'flex', padding: 4 }}>
-                    <SI d={PATHS.close} size={15} />
+                  <button onClick={handleLogout} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8BAAC8', padding: 2, display: 'flex' }}>
+                    <SI d={PATHS.logout} size={13} />
                   </button>
-                </div>
-                <div className="pnav-items">
-                  {NAV.map(n => (
-                    <div key={n.id} className={`pnav-item${tab === n.id ? ' active' : ''}`} onClick={() => handleNavClick(n.id)}>
-                      <span className="pnav-icon"><SI d={PATHS[n.id] || PATHS.dashboard} size={14} color={tab === n.id ? '#fff' : '#8BAAC8'} /></span>
-                      <span>{n.label}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="pnav-foot">
-                  <div className="pnav-user">
-                    <div className="pnav-avatar">{user?.name?.charAt(0)?.toUpperCase() || 'U'}</div>
-                    <div style={{ flex: 1, overflow: 'hidden' }}>
-                      <div style={{ fontSize: 10, color: '#fff', fontWeight: 600 }}>{user?.name}</div>
-                      <div style={{ fontSize: 9, color: '#8BAAC8', textTransform: 'capitalize' }}>{user?.role}</div>
-                    </div>
-                    <button onClick={handleLogout} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8BAAC8', padding: 2, display: 'flex' }}>
-                      <SI d={PATHS.logout} size={13} />
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>
+          </div>
 
-            <div className="pmain">
-              <div className="ptopbar">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                  <button onClick={() => isMobile ? setMobileNavOpen(o => !o) : setSidebarOpen(o => !o)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280', display: 'flex', padding: 3 }}>
-                    <SI d={PATHS.menu} size={24} />
-                  </button>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#1E3A5F', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: isMobile ? 120 : 300 }}>
-                    {NAV.find(n => n.id === tab)?.label || NAV_ADMIN.find(n => n.id === tab)?.label}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'nowrap' }}>
-                  {tab === 'products' && isAdmin && <>
-                    <button className="pbtn-ghost" onClick={() => setShowAddCat(true)} style={{ fontSize: 'clamp(9px,2.5vw,11px)', padding: 'clamp(3px,1vw,5px) clamp(6px,2vw,10px)' }}>
-                      <SI d={PATHS.folder} size={11} /> <span className="btn-label-text">Category</span>
-                    </button>
-                    <button className="pbtn" onClick={openAddProd} style={{ fontSize: 'clamp(9px,2.5vw,11px)', padding: 'clamp(4px,1vw,6px) clamp(8px,2vw,12px)' }}>
-                      <span>Add Product</span>
-                    </button>
-                  </>}
-                  {tab === 'cashiers' && isAdmin && <button className="pbtn" onClick={() => setShowAddCash(true)}><SI d={PATHS.plus} size={11} color="#fff" /><span>Add Cashier</span></button>}
-                  {tab === 'customers' && <button className="pbtn" onClick={openAddCust}><SI d={PATHS.plus} size={11} color="#fff" /><span>Add Customer</span></button>}
-                  {tab === 'expenses' && isAdmin && <button className="pbtn" onClick={() => { setExpForm({ category: '', description: '', amount: '', date: new Date().toISOString().split('T')[0], payment_method: 'cash' }); setShowAddExp(true) }}><SI d={PATHS.plus} size={11} color="#fff" /><span>Add Expense</span></button>}
-                  {tab === 'reports' && isAdmin && <button className="pbtn" onClick={fetchReport} disabled={loadingReport}><SI d={PATHS.chartbar} size={11} color="#fff" /><span>{loadingReport ? 'Loading…' : 'Generate'}</span></button>}
-                  {tab === 'audit' && isAdmin && <button className="pbtn-ghost" onClick={fetchAuditLogs} style={{ fontSize: 10 }}><SI d={PATHS.refresh} size={11} /> Refresh</button>}
-                </div>
+          {/* Main */}
+          <div className="pmain">
+            <div className="ptopbar">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                <button onClick={() => isMobile ? setMobileNavOpen(o => !o) : setSidebarOpen(o => !o)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280', display: 'flex', padding: 3 }}>
+                  <SI d={PATHS.menu} size={16} />
+                </button>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#1E3A5F' }}>
+                  {NAV.find(n => n.id === tab)?.label || NAV_ADMIN.find(n => n.id === tab)?.label}
+                </span>
               </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'nowrap' }}>
+                {tab === 'products' && isAdmin && <button className="pbtn" onClick={openAddProd}><SI d={PATHS.plus} size={11} color="#fff" /><span>Add Product</span></button>}
+                {tab === 'cashiers' && isAdmin && <button className="pbtn" onClick={() => setShowAddCash(true)}><SI d={PATHS.plus} size={11} color="#fff" /><span>Add Cashier</span></button>}
+                {tab === 'customers' && <button className="pbtn" onClick={openAddCust}><SI d={PATHS.plus} size={11} color="#fff" /><span>Add Customer</span></button>}
+                {tab === 'expenses' && isAdmin && <button className="pbtn" onClick={() => { setExpForm({ category: '', description: '', amount: '', date: new Date().toISOString().split('T')[0], payment_method: 'cash' }); setShowAddExp(true) }}><SI d={PATHS.plus} size={11} color="#fff" /><span>Add Expense</span></button>}
+              </div>
+            </div>
 
-              <div className="pcontent">
+            <div className="pcontent">
 
-                {/* DASHBOARD */}
-                {tab === 'dashboard' && isAdmin && (
-                  <>
-                    <div className="pstats">
-                      {[
-                        { label: "Today's Sales", value: loadingStats ? '…' : todayTxnCount, sub: 'Transactions today' },
-                        { label: "Today's Revenue", value: loadingStats ? '…' : fmtKES(todayRevenue), sub: 'Gross revenue today', big: true },
-                        { label: 'Total Products', value: loadingStats ? '…' : stats?.total_products ?? products.length, sub: `${lowStock.length} low stock` },
-                        { label: 'Customers', value: loadingStats ? '…' : stats?.total_customers ?? customers.length, sub: 'Registered' },
-                      ].map(s => (
-                        <div className="pstat" key={s.label}>
-                          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 4 }}>{s.label}</div>
-                          <div style={{ fontSize: s.big ? 'clamp(13px,2.5vw,20px)' : 'clamp(16px,3.5vw,24px)', fontWeight: 700, color: '#1E3A5F', lineHeight: 1, wordBreak: 'break-all' }}>{s.value}</div>
-                          <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 3 }}>{s.sub}</div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="pcard" style={{ marginBottom: 12 }}>
-                      <div className="pcard-head">
-                        <span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Today's Sales ; {fmtD(new Date())}</span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <button className="pbtn-ghost" onClick={fetchTodaySales} style={{ fontSize: 10 }}>
-                            <SI d={PATHS.refresh} size={11} color="#6B7280" /> Refresh
-                          </button>
-                          <button className="pbtn" onClick={() => setTab('sales')} style={{ fontSize: 10 }}>View All →</button>
-                        </div>
+              {/* ── DASHBOARD ── */}
+              {tab === 'dashboard' && isAdmin && (
+                <>
+                  <div className="pstats">
+                    {[
+                      { label: "Today's Sales", value: loadingStats ? '…' : (stats?.today_sales ?? todayTxnCount), sub: 'Transactions today', big: false },
+                      { label: "Today's Revenue", value: loadingStats ? '…' : fmtKES(stats?.today_revenue ?? todayRevenue), sub: 'Gross revenue today', big: true },
+                      { label: 'Total Products', value: loadingStats ? '…' : (stats?.total_products ?? products.length), sub: `${lowStock.length} low stock` },
+                      { label: 'Customers', value: loadingStats ? '…' : (stats?.total_customers ?? customers.length), sub: 'Registered' },
+                    ].map(s => (
+                      <div className="pstat" key={s.label}>
+                        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 4 }}>{s.label}</div>
+                        <div style={{ fontSize: s.big ? 'clamp(13px,2.5vw,20px)' : 'clamp(16px,3vw,24px)', fontWeight: 700, color: '#1E3A5F', lineHeight: 1, wordBreak: 'break-all' }}>{s.value}</div>
+                        <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 3 }}>{s.sub}</div>
                       </div>
-                      {loadingTodaySales ? <div className="pempty">Loading…</div> : todaySalesList.length === 0 ? <div className="pempty">No sales today yet.</div> : (
-                        <div className="tbl-wrap">
-                          <table className="pt">
-                            <thead><tr><th>Receipt</th><th>Cashier</th><th>Total</th><th>Method</th><th>Time</th><th>Actions</th></tr></thead>
-                            <tbody>
-                              {todaySalesList.slice(0, 8).map(s => (
-                                <tr key={s.id}>
-                                  <td style={{ fontFamily: 'monospace', fontSize: 10, color: '#6B7280' }}>{s.receipt_number}</td>
-                                  <td style={{ fontSize: 11 }}>{s.cashier_name || ';'}</td>
-                                  <td style={{ fontWeight: 700, color: '#1E3A5F' }}>{fmtKES(s.total_amount)}</td>
-                                  <td><span className="pbadge" style={{ background: '#EFF6FF', color: '#1E40AF', borderColor: '#BFDBFE', textTransform: 'capitalize' }}>{s.payment_method}</span></td>
-                                  <td style={{ fontSize: 10, color: '#9CA3AF' }}>{new Date(s.created_at).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })}</td>
-                                  <td>
-                                    <div style={{ display: 'flex', gap: 3 }}>
-                                      <button className="pbtn-blue" onClick={() => setReprintReceipt(s)} title="Reprint"><SI d={PATHS.print} size={10} color="#2B5393" /></button>
-                                      <button className="pbtn-orange" onClick={() => handleReturn(s)} title="Return"><SI d={PATHS.returns} size={10} color="#EA580C" /></button>
-                                    </div>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                          <div style={{ padding: '8px 12px', borderTop: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', fontSize: 11, flexWrap: 'wrap', gap: 8 }}>
-                            <span style={{ color: '#9CA3AF' }}>Transactions: <b style={{ color: '#1E3A5F' }}>{todaySalesList.length}</b></span>
-                            <span style={{ color: '#9CA3AF' }}>Total Revenue: <b style={{ color: '#16A34A' }}>{fmtKES(todayRevenue)}</b></span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {lowStock.length > 0 && (
-                      <div className="pcard">
-                        <div className="pcard-head">
-                          <span style={{ fontSize: 12, fontWeight: 700, color: '#DC2626', display: 'flex', alignItems: 'center', gap: 5 }}>
-                            <SI d={PATHS.alert} size={13} color="#DC2626" /> Low Stock ({lowStock.length})
-                          </span>
-                        </div>
-                        <div className="tbl-wrap">
-                          <table className="pt">
-                            <thead><tr><th>Product</th><th>Stock</th><th>Reorder</th><th>Unit</th></tr></thead>
-                            <tbody>
-                              {lowStock.map(p => (
-                                <tr key={p.id}>
-                                  <td><div style={{ fontWeight: 600, color: '#1E3A5F' }}>{p.name}</div><div style={{ fontSize: 10, color: '#9CA3AF' }}>{p.category || ';'}</div></td>
-                                  <td><span className="pbadge" style={{ background: '#FEF2F2', color: '#DC2626', borderColor: '#FECACA' }}>{p.stock_quantity}</span></td>
-                                  <td>{p.reorder_level}</td>
-                                  <td>{p.unit || ';'}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* ===================== POS ===================== */}
-                {tab === 'pos' && (
-                  <div className="pos-wrap" style={{ height: isMobile ? 'auto' : 'calc(100vh - 168px)' }}>
-                    <div className="pos-left">
-                      <div style={{ background: '#fff', borderRadius: 7, border: '1px solid #E5E7EB', padding: '7px 9px', display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0, overflow: 'visible', minWidth: 0 }}>
-                        <div style={{ position: 'relative', minWidth: 0, width: '100%' }}>
-                          <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><SI d={PATHS.search} size={12} color="#9AA3B0" /></span>
-                          <input style={{ ...inp, paddingLeft: 28, fontSize: 11, width: '100%', minWidth: 0 }} placeholder="Search by name, generic name or barcode…" value={posSearch} onChange={e => setPosSearch(e.target.value)} />
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
-                          <div className="cat-bar">
-                            {POS_CATS.map(c => <button key={c} className={`cat-tab${posCat === c ? ' active' : ''}`} onClick={() => setPosCat(c)}>{c === 'all' ? 'All' : c}</button>)}
-                          </div>
-                          <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
-                            {[['list', PATHS.list], ['grid', PATHS.grid]].map(([v, d]) => (
-                              <button key={v} onClick={() => setPosView(v)} style={{ width: 25, height: 25, borderRadius: 4, border: '1px solid #E2E6EA', background: posView === v ? '#1E3A5F' : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <SI d={d} size={11} color={posView === v ? '#fff' : '#9AA3B0'} />
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* ===== POS LIST VIEW — FIXED HORIZONTAL SCROLL ===== */}
-                      {posView === 'list' && (
-  <div style={{
-    background: '#fff',
-    borderRadius: 8,
-    border: '1px solid #E5E7EB',
-    maxHeight: isMobile ? '340px' : 'calc(100vh - 280px)',
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    minHeight: 0,
-    overflow: 'hidden',   /* container clips */
-    minWidth: 0,
-    width: '100%',
-  }}>
-    {/* THIS div does ALL scrolling — horizontal AND vertical */}
-    <div
-      className="pos-tbl-scroll"
-      style={{
-        overflow: 'scroll',          /* fallback */
-        overflowX: 'scroll',
-        overflowY: 'auto',
-        WebkitOverflowScrolling: 'touch',
-        display: 'block',
-        width: '100%',
-        maxHeight: isMobile ? '340px' : 'calc(100vh - 280px)',
-      }}
-    >
-      <table className="pos-list-table">
-        <thead>
-          <tr>
-            <th style={{ minWidth: 180 }}>Product</th>
-            <th style={{ minWidth: 110 }}>Category</th>
-            <th style={{ minWidth: 110 }}>Price</th>
-            <th style={{ minWidth: 90 }}>Stock</th>
-            <th style={{ minWidth: 50 }}></th>
-          </tr>
-        </thead>
-        <tbody>
-          {/* ... your existing rows ... */}
-        </tbody>
-      </table>
-    </div>
-  </div>
-)}
-                      {/* ===== END POS LIST VIEW FIX ===== */}
-
-                      {posView === 'grid' && (
-                        <div className="pos-grid-wrap">
-                          <div className="pos-grid">
-                            {posProducts.length === 0
-                              ? <div style={{ gridColumn: '1/-1', textAlign: 'center', color: '#9AA3B0', fontSize: 12, padding: 18 }}>No products found</div>
-                              : posProducts.map((p, i) => {
-                                const c = getColor(i)
-                                const sl = p.stock_quantity < 1 ? 'out2' : Number(p.stock_quantity) <= Number(p.reorder_level) ? 'low' : ''
-                                return (
-                                  <div key={p.id} className={`pcard2${p.stock_quantity < 1 ? ' out' : ''}`} onClick={() => addToCart(p)}>
-                                    <div className="pcard2__img" style={{ background: `${c}18` }}>
-                                      <SI d={PATHS.pill} size={18} color={c} />
-                                    </div>
-                                    <div className="pcard2__name">{p.name}</div>
-                                    <div className="pcard2__price">{fmtKES(p.selling_price)}</div>
-                                    <div className={`pcard2__stock${sl ? ' ' + sl : ''}`}>Stock: {p.stock_quantity} {p.unit || ''}</div>
-                                    {p.stock_quantity < 1 && <span className="pcard2__badge">Out</span>}
-                                  </div>
-                                )
-                              })}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="pos-right">
-                      <div className="cart-panel" style={{ minHeight: isMobile ? 380 : 'auto' }}>
-                        <div className="cart-hdr">
-                          <div className="cart-title-row">
-                            <div className="cart-title-txt">
-                              <SI d={PATHS.cart} size={12} color="#4A5568" />
-                              Cart <span className="cart-cnt">{cart.reduce((s, i) => s + i.qty, 0)}</span>
-                            </div>
-                            {cart.length > 0 && <button className="btn-clear" onClick={() => setCart([])}><SI d={PATHS.trash} size={10} color="#DC2626" /> Clear</button>}
-                          </div>
-                          <div style={{ display: 'flex', gap: 8, fontSize: 10, color: '#4A5568' }}>
-                            <span>Sales: <b style={{ color: '#16A34A' }}>{fmtKES(todaySales)}</b></span>
-                            <span>· Txn: <b>{txnCount}</b></span>
-                          </div>
-                        </div>
-                        <div className="cart-items">
-                          {cart.length === 0
-                            ? <div className="cart-empty"><SI d={PATHS.cart} size={30} color="#E2E6EA" /><p style={{ fontSize: 11 }}>Cart is empty.<br />Click a product to add.</p></div>
-                            : cart.map(item => (
-                              <div key={item.id} className="cart-item">
-                                <div className="cart-item__info">
-                                  <div className="cart-item__name">{item.name}</div>
-                                  <div className="cart-item__unit">{fmtKES(item.selling_price)} each</div>
-                                </div>
-                                <div className="qty-ctrl">
-                                  <button className="qty-btn minus" onClick={() => updateQty(item.id, item.qty - 1)}>−</button>
-                                  <span className="qty-val">{item.qty}</span>
-                                  <button className="qty-btn" onClick={() => updateQty(item.id, item.qty + 1)}>+</button>
-                                </div>
-                                <div className="cart-item__price">{fmtKES(Number(item.selling_price) * item.qty)}</div>
-                                <button className="cart-item__rm" onClick={() => removeFromCart(item.id)}><SI d={PATHS.close} size={9} /></button>
-                              </div>
-                            ))}
-                        </div>
-                        <div className="cart-footer">
-                          <div className="cart-row"><span className="cart-lbl">Subtotal</span><span className="cart-val">{fmtKES(cartSubtotal)}</span></div>
-                          <div className="cart-row">
-                            <span className="cart-lbl">Discount</span>
-                            <div className="disc-wrap">
-                              <input className="disc-input" type="number" value={discount} min="0" onChange={e => setDiscount(e.target.value)} />
-                              <select className="disc-type" value={discType} onChange={e => setDiscType(e.target.value)}>
-                                <option value="fixed">KES</option>
-                                <option value="percent">%</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div className="cart-row"><span className="cart-lbl">Tax (16%)</span><span className="cart-val">{fmtKES(vatAmt)}</span></div>
-                          <div className="cart-divider" />
-                          <div className="cart-total-row">
-                            <span className="cart-total-lbl">Total</span>
-                            <span className="cart-total-val">{fmtKES(cartTotal)}</span>
-                          </div>
-                          <div className="cart-actions">
-                            <button className="btn-hold" onClick={() => alert('Hold Sale ; coming soon')}><SI d={PATHS.hold} size={11} /> Hold</button>
-                            <button className="btn-checkout" disabled={cart.length === 0} onClick={() => setShowPayModal(true)}>Checkout <SI d={PATHS.check} size={11} color="#fff" /></button>
-                          </div>
-                        </div>
-                        <div className="qa-wrap">
-                          <div className="qa-title">Quick Actions</div>
-                          <div className={`qa-grid${isAdmin ? ' admin-qa' : ''}`}>
-                            {QA_LIST.map((q, i) => (
-                              <button key={i} className="qa-btn" onClick={q.fn}>
-                                <div className="qa-icon" style={{ background: q.bg }}>
-                                  <SI d={q.icon} size={11} color={q.color} />
-                                </div>
-                                <span className="qa-lbl">{q.label}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                )}
 
-                {/* PRODUCTS */}
-                {tab === 'products' && (
-                  <div className="pcard">
+                  {/* Today's Sales only */}
+                  <div className="pcard" style={{ marginBottom: 12 }}>
                     <div className="pcard-head">
-                      <span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Products ({products.length})</span>
-                      <div style={{ position: 'relative' }}>
-                        <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><SI d={PATHS.search} size={11} color="#9AA3B0" /></span>
-                        <input style={{ ...inp, paddingLeft: 26, width: 180, padding: '5px 7px 5px 26px', fontSize: 11 }} placeholder="Search…" value={prodSearch} onChange={e => setProdSearch(e.target.value)} />
+                      <span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Today's Sales ({today})</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <button className="pbtn-ghost" onClick={fetchTodaySales} style={{ fontSize: 10 }}>Refresh</button>
+                        <button className="pbtn" onClick={() => setTab('sales')} style={{ fontSize: 10 }}>View All →</button>
                       </div>
                     </div>
-                    {loadingProds ? <div className="pempty">Loading…</div> : filteredProds.length === 0 ? <div className="pempty">No products found.</div> : (
+                    {loadingTodaySales ? <div className="pempty">Loading…</div> : todaySalesList.length === 0 ? <div className="pempty">No sales today yet.</div> : (
                       <div className="tbl-wrap">
-                        <table className="pt" style={{ minWidth: 560 }}>
-                          <thead><tr><th>#</th><th>Product</th><th>Category</th><th>Buying</th><th>Selling</th><th>Stock</th><th>Expiry</th>{isAdmin && <th>Actions</th>}</tr></thead>
+                        <table className="pt" style={{ minWidth: 500 }}>
+                          <thead><tr><th>Receipt</th><th>Cashier</th><th>Total</th><th>Method</th><th>Time</th><th>Actions</th></tr></thead>
                           <tbody>
-                            {filteredProds.map((p, i) => (
-                              <tr key={p.id}>
-                                <td style={{ color: '#D1D5DB', fontSize: 10 }}>{i + 1}</td>
-                                <td><div style={{ fontWeight: 600, color: '#1E3A5F', fontSize: 11 }}>{p.name}</div><div style={{ fontSize: 9, color: '#9CA3AF' }}>{p.generic_name || ';'}</div></td>
-                                <td style={{ fontSize: 11 }}>{p.category || ';'}</td>
-                                <td style={{ fontSize: 11 }}>{fmtKES(p.buying_price)}</td>
-                                <td style={{ fontWeight: 600, fontSize: 11 }}>{fmtKES(p.selling_price)}</td>
-                                <td><span className="pbadge" style={{ background: p.stock_quantity <= p.reorder_level ? '#FEF2F2' : '#F0FDF4', color: p.stock_quantity <= p.reorder_level ? '#DC2626' : '#16A34A', borderColor: p.stock_quantity <= p.reorder_level ? '#FECACA' : '#BBF7D0' }}>{p.stock_quantity} {p.unit || ''}</span></td>
-                                <td style={{ fontSize: 10, color: p.expiry_date && new Date(p.expiry_date) < new Date() ? '#DC2626' : '#374151' }}>{p.expiry_date || ';'}</td>
-                                {isAdmin && (
-                                  <td>
-                                    <div style={{ display: 'flex', gap: 4 }}>
-                                      <button className="pbtn-ghost" onClick={() => openEditProd(p)}><SI d={PATHS.edit} size={11} /> Edit</button>
-                                      <button className="pbtn-danger" onClick={() => handleDeleteProd(p.id)}><SI d={PATHS.trash} size={11} color="#DC2626" /> Del</button>
-                                    </div>
-                                  </td>
-                                )}
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* SALES HISTORY */}
-                {tab === 'sales' && (
-                  <div className="pcard">
-                    <div className="pcard-head">
-                      <span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>
-                        {isAdmin ? 'Sales History ; All Cashiers' : `My Sales Today (${fmtD(new Date())})`}
-                      </span>
-                      {isAdmin && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: 11, color: '#9CA3AF' }}>From:</span>
-                          <input type="date" value={salesDateFrom} onChange={e => setSalesDateFrom(e.target.value)} style={{ border: '1.5px solid #E5E7EB', borderRadius: 5, padding: '4px 7px', fontSize: 11, fontFamily: 'inherit', color: '#111', background: '#F9FAFB', outline: 'none' }} />
-                          <span style={{ fontSize: 11, color: '#9CA3AF' }}>To:</span>
-                          <input type="date" value={salesDateTo} onChange={e => setSalesDateTo(e.target.value)} style={{ border: '1.5px solid #E5E7EB', borderRadius: 5, padding: '4px 7px', fontSize: 11, fontFamily: 'inherit', color: '#111', background: '#F9FAFB', outline: 'none' }} />
-                          <button className="pbtn-ghost" onClick={fetchSales} style={{ fontSize: 10 }}><SI d={PATHS.refresh} size={11} /> Refresh</button>
-                          {(salesDateFrom || salesDateTo) && <button className="pbtn-ghost" onClick={() => { setSalesDateFrom(''); setSalesDateTo(''); }} style={{ fontSize: 10 }}>Clear</button>}
-                        </div>
-                      )}
-                    </div>
-                    {loadingSales ? <div className="pempty">Loading…</div> : sales.length === 0 ? <div className="pempty">{isAdmin ? 'No sales found.' : 'No sales made today.'}</div> : (
-                      <div className="tbl-wrap">
-                        <table className="pt" style={{ minWidth: 520 }}>
-                          <thead><tr><th>Receipt</th>{isAdmin && <th>Cashier</th>}<th>Customer</th><th>Total</th><th>Paid</th><th>Change</th><th>Method</th><th>Time</th><th>Actions</th></tr></thead>
-                          <tbody>
-                            {sales.map(s => (
+                            {todaySalesList.slice(0, 10).map(s => (
                               <tr key={s.id}>
                                 <td style={{ fontFamily: 'monospace', fontSize: 10, color: '#6B7280' }}>{s.receipt_number}</td>
-                                {isAdmin && <td style={{ fontSize: 11 }}>{s.cashier_name || ';'}</td>}
-                                <td style={{ fontSize: 11, color: s.customer_name ? '#1E3A5F' : '#9CA3AF' }}>{s.customer_name || ';'}</td>
-                                <td style={{ fontWeight: 700, color: '#1E3A5F', fontSize: 11 }}>{fmtKES(s.total_amount)}</td>
-                                <td style={{ fontSize: 11 }}>{fmtKES(s.amount_paid)}</td>
-                                <td style={{ fontSize: 11 }}>{fmtKES(s.change_given)}</td>
+                                <td style={{ fontSize: 11 }}>{s.cashier_name || '—'}</td>
+                                <td style={{ fontWeight: 700, color: '#1E3A5F' }}>{fmtKES(s.total_amount)}</td>
                                 <td><span className="pbadge" style={{ background: '#EFF6FF', color: '#1E40AF', borderColor: '#BFDBFE', textTransform: 'capitalize' }}>{s.payment_method}</span></td>
                                 <td style={{ fontSize: 10, color: '#9CA3AF' }}>{new Date(s.created_at).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })}</td>
                                 <td>
                                   <div style={{ display: 'flex', gap: 3 }}>
-                                    <button className="pbtn-blue" onClick={() => setReprintReceipt(s)} title="Reprint"><SI d={PATHS.print} size={10} color="#2B5393" /></button>
-                                    <button className="pbtn-orange" onClick={() => handleReturn(s)} title="Return"><SI d={PATHS.returns} size={10} color="#EA580C" /></button>
+                                    <button className="pbtn-ghost" style={{ fontSize: 9, padding: '3px 6px' }} onClick={() => handleReprintSale(s)}><SI d={PATHS.print} size={10} /> Reprint</button>
+                                    <button className="pbtn-warn" style={{ fontSize: 9, padding: '3px 6px' }} onClick={() => handleReturnClick(s)}><SI d={PATHS.returns} size={10} color="#EA580C" /> Return</button>
                                   </div>
                                 </td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
-                        <div style={{ padding: '8px 12px', borderTop: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', fontSize: 11, flexWrap: 'wrap', gap: 8 }}>
-                          <span style={{ color: '#9CA3AF' }}>Transactions: <b style={{ color: '#1E3A5F' }}>{sales.length}</b></span>
-                          <span style={{ color: '#9CA3AF' }}>Total Revenue: <b style={{ color: '#16A34A' }}>{fmtKES(sales.reduce((s, r) => s + Number(r.total_amount), 0))}</b></span>
+                        <div style={{ padding: '8px 12px', borderTop: '1px solid #E5E7EB', display: 'flex', justifyContent: 'flex-end', gap: 14, fontSize: 11 }}>
+                          <span style={{ color: '#9CA3AF' }}>Txn: <b style={{ color: '#1E3A5F' }}>{todaySalesList.length}</b></span>
+                          <span style={{ color: '#9CA3AF' }}>Revenue: <b style={{ color: '#16A34A' }}>{fmtKES(todayRevenue)}</b></span>
                         </div>
                       </div>
                     )}
                   </div>
-                )}
 
-                {/* CUSTOMERS */}
-                {tab === 'customers' && (
-                  <div className="pcard">
-                    <div className="pcard-head">
-                      <span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Customers ({customers.length})</span>
-                      <div style={{ position: 'relative' }}>
-                        <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><SI d={PATHS.search} size={11} color="#9AA3B0" /></span>
-                        <input style={{ ...inp, paddingLeft: 26, width: 170, padding: '5px 7px 5px 26px', fontSize: 11 }} placeholder="Search…" value={custSearch} onChange={e => setCustSearch(e.target.value)} />
-                      </div>
-                    </div>
-                    {custSuccess && <div className="success-bar">{custSuccess}</div>}
-                    {loadingCusts ? <div className="pempty">Loading…</div> : filteredCusts.length === 0 ? (
-                      <div className="pempty">No customers. <span style={{ color: '#DC2626', cursor: 'pointer', fontWeight: 600 }} onClick={openAddCust}>Add first →</span></div>
-                    ) : (
-                      <div className="tbl-wrap">
-                        <table className="pt" style={{ minWidth: 400 }}>
-                          <thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Email</th><th>Address</th><th>Actions</th></tr></thead>
-                          <tbody>
-                            {filteredCusts.map((c, i) => (
-                              <tr key={c.id}>
-                                <td style={{ color: '#D1D5DB', fontSize: 10 }}>{i + 1}</td>
-                                <td>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#EBF2FC', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2B5393', fontSize: 9, fontWeight: 700, flexShrink: 0 }}>{c.name?.charAt(0).toUpperCase()}</div>
-                                    <span style={{ fontWeight: 600, color: '#1E3A5F', fontSize: 11 }}>{c.name}</span>
-                                  </div>
-                                </td>
-                                <td style={{ fontSize: 11 }}>{c.phone || ';'}</td>
-                                <td style={{ fontSize: 11, color: '#6B7280' }}>{c.email || ';'}</td>
-                                <td style={{ fontSize: 11, color: '#6B7280' }}>{c.address || ';'}</td>
-                                <td>
-                                  <div style={{ display: 'flex', gap: 4 }}>
-                                    <button className="pbtn-ghost" onClick={() => openEditCust(c)}><SI d={PATHS.edit} size={11} /> Edit</button>
-                                    {isAdmin && <button className="pbtn-danger" onClick={() => handleDeleteCustomer(c.id)}><SI d={PATHS.trash} size={11} color="#DC2626" /> Del</button>}
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* CASHIERS */}
-                {tab === 'cashiers' && isAdmin && (
-                  <div className="pcard">
-                    <div className="pcard-head">
-                      <span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Cashiers ({cashiers.length})</span>
-                    </div>
-                    {cashSuccess && <div className="success-bar">{cashSuccess}</div>}
-                    {loadingCash ? <div className="pempty">Loading…</div> : cashiers.length === 0 ? (
-                      <div className="pempty">No cashiers. <span style={{ color: '#DC2626', cursor: 'pointer', fontWeight: 600 }} onClick={() => setShowAddCash(true)}>Add first →</span></div>
-                    ) : (
-                      <div className="tbl-wrap">
-                        <table className="pt" style={{ minWidth: 380 }}>
-                          <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
-                          <tbody>
-                            {cashiers.map((c, i) => (
-                              <tr key={c.id}>
-                                <td style={{ color: '#D1D5DB', fontSize: 10 }}>{i + 1}</td>
-                                <td>
-                                  <div style={{ fontWeight: 600, color: '#1E3A5F', display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
-                                    <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#2B5393', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 9, fontWeight: 700, flexShrink: 0 }}>{c.name?.charAt(0).toUpperCase()}</div>
-                                    {c.name}
-                                  </div>
-                                </td>
-                                <td style={{ fontSize: 11, color: '#6B7280' }}>{c.email}</td>
-                                <td><span style={{ display: 'inline-flex', alignItems: 'center', fontSize: 11 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: c.is_active == 1 ? '#16A34A' : '#DC2626', display: 'inline-block', marginRight: 4 }} />{c.is_active == 1 ? 'Active' : 'Inactive'}</span></td>
-                                <td><button className="pbtn-danger" onClick={() => handleDeleteCashier(c.id)}><SI d={PATHS.trash} size={11} color="#DC2626" /> Remove</button></td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* EXPENSES */}
-                {tab === 'expenses' && isAdmin && (
-                  <>
-                    {expSuccess && <div style={{ background: '#F0FDF4', color: '#15803D', padding: '7px 12px', fontSize: 12, borderRadius: 7, marginBottom: 10, border: '1px solid #BBF7D0', fontWeight: 600 }}>{expSuccess}</div>}
-                    <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-                      <div className="pstat" style={{ flex: 1, minWidth: 150 }}>
-                        <div style={{ fontSize: 9, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Total This Month</div>
-                        <div style={{ fontSize: 'clamp(16px,4vw,22px)', fontWeight: 700, color: '#DC2626' }}>{fmtKES(totalExpenses)}</div>
-                        <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 3 }}>{expenses.length} records</div>
-                      </div>
-                      <div className="pstat" style={{ flex: 1, minWidth: 150 }}>
-                        <div style={{ fontSize: 9, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Filter Month</div>
-                        <input type="month" value={expMonth} onChange={e => setExpMonth(e.target.value)} style={{ ...inp, marginTop: 3 }} />
-                      </div>
-                    </div>
-                    {expenses.length > 0 && (
-                      <div className="chart-grid">
-                        <div className="chart-box">
-                          <div style={{ fontSize: 11, fontWeight: 700, color: '#1E3A5F', marginBottom: 10 }}>By Category</div>
-                          <BarChart data={expByCategory} color="#EA580C" height={130} />
-                        </div>
-                        <div className="chart-box">
-                          <div style={{ fontSize: 11, fontWeight: 700, color: '#1E3A5F', marginBottom: 10 }}>Distribution</div>
-                          <DonutChart data={expDonutData} size={90} />
-                        </div>
-                      </div>
-                    )}
+                  {lowStock.length > 0 && (
                     <div className="pcard">
                       <div className="pcard-head">
-                        <span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Expenses ; {expMonth}</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: '#DC2626', display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <SI d={PATHS.alert} size={13} color="#DC2626" /> Low Stock ({lowStock.length})
+                        </span>
                       </div>
-                      {loadingExp ? <div className="pempty">Loading…</div> : expenses.length === 0 ? (
-                        <div className="pempty">No expenses for {expMonth}. <span style={{ color: '#DC2626', cursor: 'pointer', fontWeight: 600 }} onClick={() => setShowAddExp(true)}>Add first →</span></div>
-                      ) : (
-                        <div className="tbl-wrap">
-                          <table className="pt" style={{ minWidth: 460 }}>
-                            <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Method</th><th>Actions</th></tr></thead>
-                            <tbody>
-                              {expenses.map(e => (
-                                <tr key={e.id}>
-                                  <td style={{ fontSize: 10 }}>{e.date}</td>
-                                  <td><span className="pbadge" style={{ background: '#FFF7ED', color: '#EA580C', borderColor: '#FED7AA' }}>{e.category}</span></td>
-                                  <td style={{ color: '#6B7280', fontSize: 11 }}>{e.description || ';'}</td>
-                                  <td style={{ fontWeight: 700, color: '#DC2626', fontSize: 11 }}>{fmtKES(e.amount)}</td>
-                                  <td style={{ fontSize: 10, textTransform: 'capitalize' }}>{e.payment_method}</td>
-                                  <td><button className="pbtn-danger" onClick={() => handleDeleteExpense(e.id)}><SI d={PATHS.trash} size={11} color="#DC2626" /> Del</button></td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                      <div className="tbl-wrap">
+                        <table className="pt">
+                          <thead><tr><th>Product</th><th>Stock</th><th>Reorder</th><th>Unit</th></tr></thead>
+                          <tbody>
+                            {lowStock.map(p => (
+                              <tr key={p.id}>
+                                <td><div style={{ fontWeight: 600, color: '#1E3A5F' }}>{p.name}</div><div style={{ fontSize: 10, color: '#9CA3AF' }}>{p.category || '—'}</div></td>
+                                <td><span className="pbadge" style={{ background: '#FEF2F2', color: '#DC2626', borderColor: '#FECACA' }}>{p.stock_quantity}</span></td>
+                                <td>{p.reorder_level}</td>
+                                <td>{p.unit || '—'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* ── POS ── */}
+              {tab === 'pos' && (
+                <div className="pos-wrap" style={{ height: isMobile ? 'auto' : 'calc(100vh - 120px)' }}>
+                  <div className="pos-left">
+                    <div style={{ background: '#fff', borderRadius: 7, border: '1px solid #E5E7EB', padding: '7px 9px', display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
+                      <div style={{ position: 'relative' }}>
+                        <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><SI d={PATHS.search} size={12} color="#9AA3B0" /></span>
+                        <input style={{ ...inp, paddingLeft: 28, fontSize: 11 }} placeholder="Search by name, generic name or barcode…" value={posSearch} onChange={e => setPosSearch(e.target.value)} />
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                        <div className="cat-bar">
+                          {POS_CATS.map(c => <button key={c} className={`cat-tab${posCat === c ? ' active' : ''}`} onClick={() => setPosCat(c)}>{c === 'all' ? 'All' : c}</button>)}
                         </div>
-                      )}
-                    </div>
-                  </>
-                )}
-
-                {/* REPORTS */}
-                {tab === 'reports' && isAdmin && (
-                  <>
-                    <div style={{ background: '#fff', borderRadius: 8, border: '1px solid #E5E7EB', padding: '10px 13px', marginBottom: 12 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F', marginRight: 4 }}>Period:</span>
-                        {[['today', 'Today'], ['week', 'This Week'], ['month', 'This Month'], ['year', 'This Year'], ['custom', 'Custom']].map(([v, l]) => (
-                          <button key={v} className={`period-btn${reportPeriod === v ? ' active' : ''}`}
-                            onClick={() => {
-                              setReportPeriod(v)
-                              const today = new Date().toISOString().split('T')[0]
-                              const now = new Date()
-                              if (v === 'today') { setReportRange({ from: today, to: today }) }
-                              if (v === 'week') {
-                                const mon = new Date(now); mon.setDate(now.getDate() - now.getDay() + 1)
-                                setReportRange({ from: mon.toISOString().split('T')[0], to: today })
-                              }
-                              if (v === 'month') { setReportRange({ from: today.slice(0, 8) + '01', to: today }) }
-                              if (v === 'year') { setReportRange({ from: today.slice(0, 5) + '01-01', to: today }) }
-                            }}>{l}
-                          </button>
-                        ))}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 11, color: '#9CA3AF' }}>From:</span>
-                        <input type="date" value={reportRange.from} onChange={e => { setReportPeriod('custom'); setReportRange(r => ({ ...r, from: e.target.value })) }} style={{ border: '1.5px solid #E5E7EB', borderRadius: 5, padding: '4px 7px', fontSize: 11, fontFamily: 'inherit', color: '#111', background: '#F9FAFB', outline: 'none' }} />
-                        <span style={{ color: '#9CA3AF', fontSize: 11 }}>To:</span>
-                        <input type="date" value={reportRange.to} onChange={e => { setReportPeriod('custom'); setReportRange(r => ({ ...r, to: e.target.value })) }} style={{ border: '1.5px solid #E5E7EB', borderRadius: 5, padding: '4px 7px', fontSize: 11, fontFamily: 'inherit', color: '#111', background: '#F9FAFB', outline: 'none' }} />
-                        <button className="pbtn" onClick={fetchReport} disabled={loadingReport}>
-                          <SI d={PATHS.chartbar} size={11} color="#fff" /> {loadingReport ? 'Loading…' : 'Generate Report'}
-                        </button>
-                      </div>
-                    </div>
-
-                    {loadingReport && <div className="pempty">Generating report…</div>}
-                    {!loadingReport && !reportData && <div className="pempty">Select a period and click Generate Report.</div>}
-
-                    {!loadingReport && reportData && (
-                      <>
-                        <div className="rep-grid">
-                          {[
-                            { label: 'Total Revenue', value: fmtKES(reportData.total_revenue || 0), color: '#16A34A', icon: PATHS.trend },
-                            { label: 'Gross Profit', value: fmtKES(reportData.gross_profit || 0), color: '#0891B2', icon: PATHS.chartline },
-                            { label: 'Net Profit', value: fmtKES(reportData.net_profit || 0), color: '#7C3AED', icon: PATHS.chartline },
-                            { label: 'Total Expenses', value: fmtKES(reportData.total_expenses || 0), color: '#DC2626', icon: PATHS.expenses },
-                            { label: 'Transactions', value: reportData.total_transactions || 0, color: '#2B5393', icon: PATHS.receipt },
-                            { label: 'Tax Collected', value: fmtKES(reportData.total_tax || 0), color: '#EA580C', icon: PATHS.percent },
-                            { label: 'Avg Sale', value: fmtKES(reportData.avg_sale || 0), color: '#7C3AED', icon: PATHS.chartline },
-                            { label: 'Discounts', value: fmtKES(reportData.total_discount || 0), color: '#9CA3AF', icon: PATHS.tag },
-                          ].map(c => (
-                            <div className="rep-card" key={c.label}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 5 }}>
-                                <div style={{ width: 26, height: 26, borderRadius: 6, background: `${c.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                  <SI d={c.icon} size={12} color={c.color} />
-                                </div>
-                                <span style={{ fontSize: 9, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5 }}>{c.label}</span>
-                              </div>
-                              <div style={{ fontSize: 'clamp(13px,2.5vw,18px)', fontWeight: 700, color: c.color }}>{c.value}</div>
-                            </div>
+                        <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+                          {[['list', PATHS.list], ['grid', PATHS.grid]].map(([v, d]) => (
+                            <button key={v} onClick={() => setPosView(v)} style={{ width: 25, height: 25, borderRadius: 4, border: '1px solid #E2E6EA', background: posView === v ? '#1E3A5F' : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <SI d={d} size={11} color={posView === v ? '#fff' : '#9AA3B0'} />
+                            </button>
                           ))}
                         </div>
+                      </div>
+                    </div>
 
-                        {reportData.daily_breakdown && reportData.daily_breakdown.length > 0 && (
-                          <div className="chart-box" style={{ marginBottom: 12 }}>
-                            <div style={{ fontSize: 11, fontWeight: 700, color: '#1E3A5F', marginBottom: 10 }}>Daily Revenue ({reportData.from} → {reportData.to})</div>
-                            <BarChart data={reportData.daily_breakdown.map(d => ({ label: d.sale_date?.slice(5), value: Math.round(Number(d.daily_revenue)) }))} color="#2B5393" height={130} />
-                          </div>
-                        )}
+                    {posView === 'list' && (
+                      <div
+                        className="pos-list-wrap"
+                        style={{
+                          display: 'block',
+                          overflowX: 'auto',
+                          overflowY: 'auto',
+                          WebkitOverflowScrolling: 'touch',
+                          maxHeight: isMobile ? '360px' : 'calc(100vh - 260px)',
+                          flex: isMobile ? 'none' : '1',
+                          minHeight: isMobile ? 200 : 0,
+                        }}
+                      >
+                        <table className="pos-list-table">
+                          <thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th></th></tr></thead>
+                          <tbody>
+                            {posProducts.length === 0
+                              ? <tr><td colSpan={5} style={{ textAlign: 'center', color: '#9AA3B0', padding: 18 }}>No products found</td></tr>
+                              : posProducts.map(p => (
+                                <tr key={p.id} className={p.stock_quantity < 1 ? 'out-row' : ''} onClick={() => addToCart(p)}>
+                                  <td><div style={{ fontWeight: 600, color: '#1E3A5F', fontSize: 11 }}>{p.name}</div><div style={{ fontSize: 9, color: '#9AA3B0' }}>{p.generic_name || '—'}</div></td>
+                                  <td style={{ fontSize: 10, color: '#9AA3B0' }}>{p.category || '—'}</td>
+                                  <td style={{ fontWeight: 700, color: '#2B5393', fontSize: 11 }}>{fmtKES(p.selling_price)}</td>
+                                  <td>
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '1px 7px', borderRadius: 999, fontSize: 9, fontWeight: 600, background: p.stock_quantity < 1 ? '#FEF2F2' : Number(p.stock_quantity) <= Number(p.reorder_level) ? '#FFF7ED' : '#F0FDF4', color: p.stock_quantity < 1 ? '#DC2626' : Number(p.stock_quantity) <= Number(p.reorder_level) ? '#EA580C' : '#16A34A' }}>
+                                      {p.stock_quantity < 1 ? 'Out' : `${p.stock_quantity} ${p.unit || ''}`}
+                                    </span>
+                                  </td>
+                                  <td>
+                                    <button disabled={p.stock_quantity < 1} onClick={e => { e.stopPropagation(); addToCart(p) }}
+                                      style={{ width: 24, height: 24, borderRadius: 4, background: p.stock_quantity < 1 ? '#E2E6EA' : '#2B5393', border: 'none', cursor: p.stock_quantity < 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 'auto' }}>
+                                      <SI d={PATHS.plus} size={11} color="#fff" />
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
 
-                        {reportData.by_payment_method && Object.keys(reportData.by_payment_method).length > 0 && (
-                          <div className="chart-grid" style={{ marginBottom: 12 }}>
-                            <div className="chart-box">
-                              <div style={{ fontSize: 11, fontWeight: 700, color: '#1E3A5F', marginBottom: 10 }}>Revenue by Payment Method</div>
-                              <BarChart data={Object.entries(reportData.by_payment_method).map(([label, value]) => ({ label, value }))} color="#2B5393" height={130} />
-                            </div>
-                            <div className="chart-box">
-                              <div style={{ fontSize: 11, fontWeight: 700, color: '#1E3A5F', marginBottom: 10 }}>Payment Mix</div>
-                              <DonutChart data={Object.entries(reportData.by_payment_method).map(([label, value]) => ({ label, value }))} size={90} />
-                            </div>
-                          </div>
-                        )}
-
-                        {reportData.expenses_by_category && reportData.expenses_by_category.length > 0 && (
-                          <div className="chart-grid" style={{ marginBottom: 12 }}>
-                            <div className="chart-box">
-                              <div style={{ fontSize: 11, fontWeight: 700, color: '#1E3A5F', marginBottom: 10 }}>Expenses by Category</div>
-                              <BarChart data={reportData.expenses_by_category.map(d => ({ label: d.category?.slice(0, 6), value: Math.round(Number(d.total)) }))} color="#EA580C" height={130} />
-                            </div>
-                            <div className="chart-box">
-                              <div style={{ fontSize: 11, fontWeight: 700, color: '#1E3A5F', marginBottom: 10 }}>Expense Distribution</div>
-                              <DonutChart data={reportData.expenses_by_category.map(d => ({ label: d.category, value: Number(d.total) }))} size={90} />
-                            </div>
-                          </div>
-                        )}
-
-                        {reportData.by_payment_method && Object.keys(reportData.by_payment_method).length > 0 && (
-                          <div className="rep-bar-wrap">
-                            <div style={{ fontSize: 11, fontWeight: 700, color: '#1E3A5F', marginBottom: 10 }}>Revenue Breakdown</div>
-                            {Object.entries(reportData.by_payment_method).map(([method, amount], i) => {
-                              const max = Math.max(...Object.values(reportData.by_payment_method))
+                    {posView === 'grid' && (
+                      <div className="pos-grid-wrap">
+                        <div className="pos-grid">
+                          {posProducts.length === 0
+                            ? <div style={{ gridColumn: '1/-1', textAlign: 'center', color: '#9AA3B0', fontSize: 12, padding: 18 }}>No products found</div>
+                            : posProducts.map((p, i) => {
+                              const c = getColor(i)
+                              const sl = p.stock_quantity < 1 ? 'out2' : Number(p.stock_quantity) <= Number(p.reorder_level) ? 'low' : ''
                               return (
-                                <div className="bar-row" key={method}>
-                                  <span className="bar-label" style={{ textTransform: 'capitalize' }}>{method}</span>
-                                  <div className="bar-track"><div className="bar-fill" style={{ width: `${max > 0 ? (amount / max) * 100 : 0}%`, background: COLORS[i % COLORS.length] }} /></div>
-                                  <span className="bar-val">{fmtKES(amount)}</span>
+                                <div key={p.id} className={`pcard2${p.stock_quantity < 1 ? ' out' : ''}`} onClick={() => addToCart(p)}>
+                                  <div className="pcard2__img" style={{ background: `${c}18` }}>
+                                    <SI d={PATHS.pill} size={18} color={c} />
+                                  </div>
+                                  <div className="pcard2__name">{p.name}</div>
+                                  <div className="pcard2__price">{fmtKES(p.selling_price)}</div>
+                                  <div className={`pcard2__stock${sl ? ' ' + sl : ''}`}>Stock: {p.stock_quantity} {p.unit || ''}</div>
+                                  {p.stock_quantity < 1 && <span className="pcard2__badge">Out</span>}
                                 </div>
                               )
                             })}
-                          </div>
-                        )}
-
-                        {reportData.top_products && reportData.top_products.length > 0 && (
-                          <div className="pcard">
-                            <div className="pcard-head"><span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Top Selling Products</span></div>
-                            <div className="chart-box" style={{ margin: 12 }}>
-                              <BarChart data={reportData.top_products.slice(0, 8).map(p => ({ label: p.product_name?.slice(0, 6), value: Number(p.total_qty) }))} color="#16A34A" height={120} />
-                            </div>
-                            <div className="tbl-wrap">
-                              <table className="pt">
-                                <thead><tr><th>#</th><th>Product</th><th>Qty Sold</th><th>Revenue</th></tr></thead>
-                                <tbody>
-                                  {reportData.top_products.slice(0, 10).map((p, i) => (
-                                    <tr key={i}>
-                                      <td style={{ color: '#D1D5DB', fontSize: 10 }}>{i + 1}</td>
-                                      <td style={{ fontWeight: 600, color: '#1E3A5F', fontSize: 11 }}>{p.product_name}</td>
-                                      <td><span className="pbadge" style={{ background: '#EFF6FF', color: '#1E40AF', borderColor: '#BFDBFE' }}>{p.total_qty}</span></td>
-                                      <td style={{ fontWeight: 700, color: '#16A34A', fontSize: 11 }}>{fmtKES(p.total_revenue)}</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="pcard" style={{ marginTop: 12 }}>
-                          <div className="pcard-head"><span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Profit & Loss Summary</span></div>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 0 }}>
-                            {[
-                              { label: 'Gross Revenue', value: fmtKES(reportData.total_revenue || 0), color: '#16A34A', bg: '#F0FDF4' },
-                              { label: 'Total Expenses', value: fmtKES(reportData.total_expenses || 0), color: '#DC2626', bg: '#FEF2F2' },
-                              { label: 'Gross Profit', value: fmtKES(reportData.gross_profit || 0), color: '#0891B2', bg: '#EFF6FF' },
-                              { label: 'Net Profit', value: fmtKES(reportData.net_profit || 0), color: '#7C3AED', bg: '#F5F3FF' },
-                              { label: 'Tax Collected', value: fmtKES(reportData.total_tax || 0), color: '#EA580C', bg: '#FFF7ED' },
-                              { label: 'Discounts Given', value: fmtKES(reportData.total_discount || 0), color: '#9CA3AF', bg: '#F9FAFB' },
-                            ].map((s, i) => (
-                              <div key={i} style={{ padding: '12px 14px', background: s.bg }}>
-                                <div style={{ fontSize: 9, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 4 }}>{s.label}</div>
-                                <div style={{ fontSize: 'clamp(13px,2.5vw,17px)', fontWeight: 700, color: s.color }}>{s.value}</div>
-                              </div>
-                            ))}
-                          </div>
                         </div>
-                      </>
+                      </div>
                     )}
-                  </>
-                )}
+                  </div>
 
-                {/* AUDIT LOG */}
-                {tab === 'audit' && isAdmin && (
-                  <>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 8, marginBottom: 12 }}>
-                      {[
-                        { label: 'Total Events', value: auditLogs.length, color: '#2B5393', bg: '#EBF2FC' },
-                        { label: 'Sales Events', value: auditLogs.filter(l => l.type === 'sale').length, color: '#16A34A', bg: '#F0FDF4' },
-                        { label: 'Returns', value: auditLogs.filter(l => l.type === 'return').length, color: '#DC2626', bg: '#FEF2F2' },
-                        { label: 'Imports', value: auditLogs.filter(l => l.type === 'import').length, color: '#0891B2', bg: '#ECFEFF' },
-                      ].map(s => (
-                        <div key={s.label} style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 8, padding: '10px 12px' }}>
-                          <div style={{ fontSize: 9, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>{s.label}</div>
-                          <div style={{ fontSize: 22, fontWeight: 700, color: s.color }}>{s.value}</div>
+                  {/* Cart */}
+                  <div className="pos-right">
+                    <div className="cart-panel" style={{ minHeight: isMobile ? 380 : 'auto' }}>
+                      <div className="cart-hdr">
+                        <div className="cart-title-row">
+                          <div className="cart-title-txt">
+                            <SI d={PATHS.cart} size={12} color="#4A5568" />
+                            Cart <span className="cart-cnt">{cart.reduce((s, i) => s + i.qty, 0)}</span>
+                          </div>
+                          {cart.length > 0 && <button className="btn-clear" onClick={() => setCart([])}><SI d={PATHS.trash} size={10} color="#DC2626" /> Clear</button>}
                         </div>
-                      ))}
-                    </div>
-
-                    <div className="pcard">
-                      <div className="pcard-head">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <SI d={PATHS.audit} size={14} color="#1E3A5F" />
-                          <span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Audit History</span>
-                          <span style={{ fontSize: 10, color: '#9CA3AF', marginLeft: 4 }}>Admin-only view</span>
+                        <div style={{ display: 'flex', gap: 8, fontSize: 10, color: '#4A5568' }}>
+                          <span>Sales: <b style={{ color: '#16A34A' }}>{fmtKES(todaySales)}</b></span>
+                          <span>· Txn: <b>{txnCount}</b></span>
                         </div>
-                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                          {[['all', 'All'], ['sale', 'Sales'], ['return', 'Returns'], ['product', 'Products'], ['import', 'Imports'], ['expense', 'Expenses']].map(([v, l]) => (
-                            <button key={v} className={`period-btn${auditFilter === v ? ' active' : ''}`} style={{ fontSize: 10, padding: '3px 8px' }} onClick={() => setAuditFilter(v)}>{l}</button>
+                      </div>
+                      <div className="cart-items">
+                        {cart.length === 0
+                          ? <div className="cart-empty"><SI d={PATHS.cart} size={30} color="#E2E6EA" /><p style={{ fontSize: 11 }}>Cart is empty.<br />Click a product to add.</p></div>
+                          : cart.map(item => (
+                            <div key={item.id} className="cart-item">
+                              <div className="cart-item__info">
+                                <div className="cart-item__name">{item.name}</div>
+                                <div className="cart-item__unit">{fmtKES(item.selling_price)} each</div>
+                              </div>
+                              <div className="qty-ctrl">
+                                <button className="qty-btn minus" onClick={() => updateQty(item.id, item.qty - 1)}>−</button>
+                                <span className="qty-val">{item.qty}</span>
+                                <button className="qty-btn" onClick={() => updateQty(item.id, item.qty + 1)}>+</button>
+                              </div>
+                              <div className="cart-item__price">{fmtKES(Number(item.selling_price) * item.qty)}</div>
+                              <button className="cart-item__rm" onClick={() => removeFromCart(item.id)}><SI d={PATHS.close} size={9} /></button>
+                            </div>
+                          ))}
+                      </div>
+                      <div className="cart-footer">
+                        <div className="cart-row"><span className="cart-lbl">Subtotal</span><span className="cart-val">{fmtKES(cartSubtotal)}</span></div>
+                        <div className="cart-row">
+                          <span className="cart-lbl">Discount</span>
+                          <div className="disc-wrap">
+                            <input className="disc-input" type="number" value={discount} min="0" onChange={e => setDiscount(e.target.value)} />
+                            <select className="disc-type" value={discType} onChange={e => setDiscType(e.target.value)}>
+                              <option value="fixed">KES</option>
+                              <option value="percent">%</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="cart-row"><span className="cart-lbl">Tax (16%)</span><span className="cart-val">{fmtKES(vatAmt)}</span></div>
+                        <div className="cart-divider" />
+                        <div className="cart-total-row">
+                          <span className="cart-total-lbl">Total</span>
+                          <span className="cart-total-val">{fmtKES(cartTotal)}</span>
+                        </div>
+                        <div className="cart-actions">
+                          <button className="btn-hold" onClick={() => alert('Hold Sale — coming soon')}><SI d={PATHS.hold} size={11} /> Hold</button>
+                          <button className="btn-checkout" disabled={cart.length === 0} onClick={() => setShowPayModal(true)}>Checkout <SI d={PATHS.check} size={11} color="#fff" /></button>
+                        </div>
+                      </div>
+                      <div className="qa-wrap">
+                        <div className="qa-title">Quick Actions</div>
+                        <div className="qa-grid">
+                          {quickActions.map((q, i) => (
+                            <button key={i} className="qa-btn" onClick={q.fn}>
+                              <div className="qa-icon" style={{ background: q.bg }}><SI d={q.icon} size={11} color={q.color} /></div>
+                              <span className="qa-lbl">{q.label}</span>
+                            </button>
                           ))}
                         </div>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-                      {loadingAudit ? (
-                        <div className="pempty">Loading audit log…</div>
-                      ) : filteredAudit.length === 0 ? (
-                        <div className="pempty">
-                          <SI d={PATHS.audit} size={32} color="#E5E7EB" />
-                          <div style={{ marginTop: 8 }}>No audit events found.</div>
-                          <div style={{ fontSize: 10, color: '#D1D5DB', marginTop: 4 }}>Events are recorded as actions happen in the system.</div>
-                        </div>
-                      ) : (
-                        <div className="tbl-wrap">
-                          <table className="pt" style={{ minWidth: 500 }}>
-                            <thead>
-                              <tr>
-                                <th>#</th>
-                                <th>Event</th>
-                                <th>Description</th>
-                                <th>User</th>
-                                <th>Meta</th>
-                                <th>Timestamp</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {filteredAudit.map((log, i) => {
-                                const tc = auditTypeColors[log.type] || auditTypeColors.sale
-                                return (
-                                  <tr key={log.id}>
-                                    <td style={{ color: '#D1D5DB', fontSize: 10 }}>{i + 1}</td>
-                                    <td>
-                                      <span className="audit-badge" style={{ background: tc.bg, color: tc.color, borderColor: tc.border, textTransform: 'uppercase', fontSize: 9 }}>
-                                        {log.action}
-                                      </span>
-                                    </td>
-                                    <td style={{ fontSize: 11, color: '#374151', maxWidth: 220 }}>{log.description}</td>
-                                    <td>
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                                        <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#EBF2FC', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, color: '#2B5393', flexShrink: 0 }}>{(log.user || 'S').charAt(0).toUpperCase()}</div>
-                                        <span style={{ fontSize: 11, color: '#1E3A5F', fontWeight: 600 }}>{log.user || ';'}</span>
-                                      </div>
-                                    </td>
-                                    <td style={{ fontSize: 10, color: '#9CA3AF', textTransform: 'capitalize' }}>{log.meta || ';'}</td>
-                                    <td style={{ fontSize: 10, color: '#6B7280', whiteSpace: 'nowrap' }}>
-                                      {log.timestamp ? new Date(log.timestamp).toLocaleString('en-KE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : ';'}
-                                    </td>
-                                  </tr>
-                                )
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
+              {/* ── PRODUCTS ── */}
+              {tab === 'products' && (
+                <div className="pcard">
+                  <div className="pcard-head">
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Products ({products.length})</span>
+                    <div style={{ position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><SI d={PATHS.search} size={11} color="#9AA3B0" /></span>
+                      <input style={{ ...inp, paddingLeft: 26, width: 180, padding: '5px 7px 5px 26px', fontSize: 11 }} placeholder="Search…" value={prodSearch} onChange={e => setProdSearch(e.target.value)} />
+                    </div>
+                  </div>
+                  {loadingProds ? <div className="pempty">Loading…</div> : filteredProds.length === 0 ? <div className="pempty">No products found.</div> : (
+                    <div className="tbl-wrap">
+                      <table className="pt" style={{ minWidth: 600 }}>
+                        <thead><tr><th>#</th><th>Product</th><th>Category</th><th>Buying</th><th>Selling</th><th>Stock</th><th>Expiry</th>{isAdmin && <th>Actions</th>}</tr></thead>
+                        <tbody>
+                          {filteredProds.map((p, i) => (
+                            <tr key={p.id}>
+                              <td style={{ color: '#D1D5DB', fontSize: 10 }}>{i + 1}</td>
+                              <td><div style={{ fontWeight: 600, color: '#1E3A5F', fontSize: 11 }}>{p.name}</div><div style={{ fontSize: 9, color: '#9CA3AF' }}>{p.generic_name || '—'}</div></td>
+                              <td style={{ fontSize: 11 }}>{p.category || '—'}</td>
+                              <td style={{ fontSize: 11 }}>{fmtKES(p.buying_price)}</td>
+                              <td style={{ fontWeight: 600, fontSize: 11 }}>{fmtKES(p.selling_price)}</td>
+                              <td><span className="pbadge" style={{ background: p.stock_quantity <= p.reorder_level ? '#FEF2F2' : '#F0FDF4', color: p.stock_quantity <= p.reorder_level ? '#DC2626' : '#16A34A', borderColor: p.stock_quantity <= p.reorder_level ? '#FECACA' : '#BBF7D0' }}>{p.stock_quantity} {p.unit || ''}</span></td>
+                              <td style={{ fontSize: 10, color: p.expiry_date && new Date(p.expiry_date) < new Date() ? '#DC2626' : '#374151' }}>{p.expiry_date || '—'}</td>
+                              {isAdmin && (
+                                <td>
+                                  <div style={{ display: 'flex', gap: 4 }}>
+                                    <button className="pbtn-ghost" onClick={() => openEditProd(p)}><SI d={PATHS.edit} size={11} /> Edit</button>
+                                    <button className="pbtn-danger" onClick={() => handleDeleteProd(p.id)}><SI d={PATHS.trash} size={11} color="#DC2626" /> Del</button>
+                                  </div>
+                                </td>
+                              )}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
 
-                      <div style={{ padding: '8px 14px', borderTop: '1px solid #E5E7EB', background: '#FAFAFA', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <SI d={PATHS.lock} size={10} color="#9CA3AF" />
-                        <span style={{ fontSize: 10, color: '#9CA3AF' }}>Audit log is read-only and visible to administrators only. All system actions are automatically recorded.</span>
+              {/* ── SALES ── */}
+              {tab === 'sales' && (
+                <div className="pcard">
+                  <div className="pcard-head">
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>
+                      {isAdmin ? 'Sales History' : `My Sales — Today (${today})`}
+                    </span>
+                    {isAdmin && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 11, color: '#9CA3AF' }}>From</span>
+                        <input type="date" value={salesFromDate} onChange={e => setSalesFromDate(e.target.value)} style={{ border: '1.5px solid #E5E7EB', borderRadius: 5, padding: '4px 7px', fontSize: 11, fontFamily: 'inherit', color: '#111', background: '#F9FAFB', outline: 'none' }} />
+                        <span style={{ fontSize: 11, color: '#9CA3AF' }}>To</span>
+                        <input type="date" value={salesToDate} onChange={e => setSalesToDate(e.target.value)} style={{ border: '1.5px solid #E5E7EB', borderRadius: 5, padding: '4px 7px', fontSize: 11, fontFamily: 'inherit', color: '#111', background: '#F9FAFB', outline: 'none' }} />
+                        <button className="pbtn" onClick={fetchSales} style={{ fontSize: 10 }}>Filter</button>
+                        <button className="pbtn-ghost" onClick={() => { setSalesFromDate(''); setSalesToDate(''); setTimeout(fetchSales, 100) }} style={{ fontSize: 10 }}>All</button>
+                      </div>
+                    )}
+                  </div>
+                  {loadingSales ? <div className="pempty">Loading…</div> : displayedSales.length === 0 ? <div className="pempty">{isAdmin ? 'No sales found. Use filters or click "All".' : 'No sales made by you today.'}</div> : (
+                    <div className="tbl-wrap">
+                      <table className="pt" style={{ minWidth: 600 }}>
+                        <thead>
+                          <tr>
+                            <th>Receipt</th>
+                            {isAdmin && <th>Cashier</th>}
+                            <th>Customer</th>
+                            <th>Total</th>
+                            <th>Method</th>
+                            <th>Time</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {displayedSales.map(s => (
+                            <tr key={s.id}>
+                              <td style={{ fontFamily: 'monospace', fontSize: 10, color: '#6B7280' }}>{s.receipt_number}</td>
+                              {isAdmin && <td style={{ fontSize: 11 }}>{s.cashier_name || '—'}</td>}
+                              <td style={{ fontSize: 11, color: s.customer_name ? '#1E3A5F' : '#9CA3AF' }}>{s.customer_name || '—'}</td>
+                              <td style={{ fontWeight: 700, color: '#1E3A5F', fontSize: 11 }}>{fmtKES(s.total_amount)}</td>
+                              <td><span className="pbadge" style={{ background: '#EFF6FF', color: '#1E40AF', borderColor: '#BFDBFE', textTransform: 'capitalize' }}>{s.payment_method}</span></td>
+                              <td style={{ fontSize: 10, color: '#9CA3AF' }}>{new Date(s.created_at).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })}</td>
+                              <td>
+                                <div style={{ display: 'flex', gap: 3, flexWrap: 'nowrap' }}>
+                                  <button className="pbtn-ghost" style={{ fontSize: 9, padding: '3px 6px' }} onClick={() => handleReprintSale(s)}><SI d={PATHS.print} size={10} /> Reprint</button>
+                                  <button className="pbtn-warn" style={{ fontSize: 9, padding: '3px 6px' }} onClick={() => handleReturnClick(s)}><SI d={PATHS.returns} size={10} color="#EA580C" /> Return</button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      <div style={{ padding: '8px 12px', borderTop: '1px solid #E5E7EB', display: 'flex', justifyContent: 'flex-end', gap: 14, fontSize: 11 }}>
+                        <span style={{ color: '#9CA3AF' }}>Transactions: <b style={{ color: '#1E3A5F' }}>{displayedSales.length}</b></span>
+                        <span style={{ color: '#9CA3AF' }}>Revenue: <b style={{ color: '#16A34A' }}>{fmtKES(displayedSales.reduce((s, r) => s + Number(r.total_amount), 0))}</b></span>
                       </div>
                     </div>
-                  </>
-                )}
+                  )}
+                </div>
+              )}
 
-                {/* SETTINGS */}
-                {tab === 'settings' && isAdmin && (
-                  <>
-                    {settingsSaved && <div style={{ background: '#F0FDF4', color: '#15803D', padding: '7px 12px', fontSize: 12, borderRadius: 7, marginBottom: 10, border: '1px solid #BBF7D0', fontWeight: 600 }}>Settings saved.</div>}
-                    <div className="set-section">
-                      <div style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <SI d={PATHS.building} size={13} color="#1E3A5F" /> Business Information
+              {/* ── CUSTOMERS ── */}
+              {tab === 'customers' && (
+                <div className="pcard">
+                  <div className="pcard-head">
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Customers ({customers.length})</span>
+                    <div style={{ position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><SI d={PATHS.search} size={11} color="#9AA3B0" /></span>
+                      <input style={{ ...inp, paddingLeft: 26, width: 170, padding: '5px 7px 5px 26px', fontSize: 11 }} placeholder="Search…" value={custSearch} onChange={e => setCustSearch(e.target.value)} />
+                    </div>
+                  </div>
+                  {custSuccess && <div className="success-bar">{custSuccess}</div>}
+                  {loadingCusts ? <div className="pempty">Loading…</div> : filteredCusts.length === 0 ? (
+                    <div className="pempty">No customers. <span style={{ color: '#DC2626', cursor: 'pointer', fontWeight: 600 }} onClick={openAddCust}>Add first →</span></div>
+                  ) : (
+                    <div className="tbl-wrap">
+                      <table className="pt" style={{ minWidth: 460 }}>
+                        <thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Email</th><th>Address</th><th>Actions</th></tr></thead>
+                        <tbody>
+                          {filteredCusts.map((c, i) => (
+                            <tr key={c.id}>
+                              <td style={{ color: '#D1D5DB', fontSize: 10 }}>{i + 1}</td>
+                              <td>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                  <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#EBF2FC', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2B5393', fontSize: 9, fontWeight: 700, flexShrink: 0 }}>{c.name?.charAt(0).toUpperCase()}</div>
+                                  <span style={{ fontWeight: 600, color: '#1E3A5F', fontSize: 11 }}>{c.name}</span>
+                                </div>
+                              </td>
+                              <td style={{ fontSize: 11 }}>{c.phone || '—'}</td>
+                              <td style={{ fontSize: 11, color: '#6B7280' }}>{c.email || '—'}</td>
+                              <td style={{ fontSize: 11, color: '#6B7280' }}>{c.address || '—'}</td>
+                              <td>
+                                <div style={{ display: 'flex', gap: 4 }}>
+                                  <button className="pbtn-ghost" onClick={() => openEditCust(c)}><SI d={PATHS.edit} size={11} /> Edit</button>
+                                  {isAdmin && <button className="pbtn-danger" onClick={() => handleDeleteCustomer(c.id)}><SI d={PATHS.trash} size={11} color="#DC2626" /> Del</button>}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── CASHIERS ── */}
+              {tab === 'cashiers' && isAdmin && (
+                <div className="pcard">
+                  <div className="pcard-head">
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Cashiers ({cashiers.length})</span>
+                  </div>
+                  {cashSuccess && <div className="success-bar">{cashSuccess}</div>}
+                  {loadingCash ? <div className="pempty">Loading…</div> : cashiers.length === 0 ? (
+                    <div className="pempty">No cashiers. <span style={{ color: '#DC2626', cursor: 'pointer', fontWeight: 600 }} onClick={() => setShowAddCash(true)}>Add first →</span></div>
+                  ) : (
+                    <div className="tbl-wrap">
+                      <table className="pt" style={{ minWidth: 420 }}>
+                        <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody>
+                          {cashiers.map((c, i) => (
+                            <tr key={c.id}>
+                              <td style={{ color: '#D1D5DB', fontSize: 10 }}>{i + 1}</td>
+                              <td>
+                                <div style={{ fontWeight: 600, color: '#1E3A5F', display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                                  <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#2B5393', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 9, fontWeight: 700, flexShrink: 0 }}>{c.name?.charAt(0).toUpperCase()}</div>
+                                  {c.name}
+                                </div>
+                              </td>
+                              <td style={{ fontSize: 11, color: '#6B7280' }}>{c.email}</td>
+                              <td><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: c.is_active == 1 ? '#16A34A' : '#DC2626', display: 'inline-block' }} />{c.is_active == 1 ? 'Active' : 'Inactive'}</span></td>
+                              <td><button className="pbtn-danger" onClick={() => handleDeleteCashier(c.id)}><SI d={PATHS.trash} size={11} color="#DC2626" /> Remove</button></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── EXPENSES ── */}
+              {tab === 'expenses' && isAdmin && (
+                <>
+                  {expSuccess && <div style={{ background: '#F0FDF4', color: '#15803D', padding: '7px 12px', fontSize: 12, borderRadius: 7, marginBottom: 10, border: '1px solid #BBF7D0', fontWeight: 600 }}>{expSuccess}</div>}
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+                    <div className="pstat" style={{ flex: 1, minWidth: 150 }}>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Total This Month</div>
+                      <div style={{ fontSize: 'clamp(16px,4vw,22px)', fontWeight: 700, color: '#DC2626' }}>{fmtKES(totalExpenses)}</div>
+                      <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 3 }}>{expenses.length} records</div>
+                    </div>
+                    <div className="pstat" style={{ flex: 1, minWidth: 150 }}>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Filter Month</div>
+                      <input type="month" value={expMonth} onChange={e => setExpMonth(e.target.value)} style={{ ...inp, marginTop: 3 }} />
+                    </div>
+                  </div>
+
+                  {expenses.length > 0 && (
+                    <div className="chart-grid">
+                      <div className="chart-box">
+                        <div style={{ fontSize: 11, fontWeight: 700, color: '#1E3A5F', marginBottom: 10 }}>Expenses by Category</div>
+                        <BarChart data={expByCategory} color="#EA580C" height={130} />
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 10 }}>
-                        {[{ label: 'Business Name', key: 'business_name', type: 'text' }, { label: 'Phone', key: 'phone', type: 'tel' }, { label: 'Email', key: 'email', type: 'email' }, { label: 'Address', key: 'address', type: 'text' }].map(f => (
-                          <div key={f.key}>
-                            <label className="set-label">{f.label}</label>
-                            <input className="set-inp" type={f.type} value={settingsForm[f.key]} onChange={e => setSettingsForm(s => ({ ...s, [f.key]: e.target.value }))} />
+                      <div className="chart-box">
+                        <div style={{ fontSize: 11, fontWeight: 700, color: '#1E3A5F', marginBottom: 10 }}>Distribution</div>
+                        <DonutChart data={expDonutData} size={90} />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="pcard">
+                    <div className="pcard-head">
+                      <span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Expenses — {expMonth}</span>
+                    </div>
+                    {loadingExp ? <div className="pempty">Loading…</div> : expenses.length === 0 ? (
+                      <div className="pempty">No expenses for {expMonth}. <span style={{ color: '#DC2626', cursor: 'pointer', fontWeight: 600 }} onClick={() => setShowAddExp(true)}>Add first →</span></div>
+                    ) : (
+                      <div className="tbl-wrap">
+                        <table className="pt" style={{ minWidth: 500 }}>
+                          <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Method</th><th>Actions</th></tr></thead>
+                          <tbody>
+                            {expenses.map(e => (
+                              <tr key={e.id}>
+                                <td style={{ fontSize: 10 }}>{e.date}</td>
+                                <td><span className="pbadge" style={{ background: '#FFF7ED', color: '#EA580C', borderColor: '#FED7AA', fontSize: 9, padding: '1px 5px' }}>{e.category}</span></td>
+                                <td style={{ color: '#6B7280', fontSize: 11 }}>{e.description || '—'}</td>
+                                <td style={{ fontWeight: 700, color: '#DC2626', fontSize: 11 }}>{fmtKES(e.amount)}</td>
+                                <td style={{ fontSize: 10, textTransform: 'capitalize' }}>{e.payment_method}</td>
+                                <td><button className="pbtn-danger" onClick={() => handleDeleteExpense(e.id)}><SI d={PATHS.trash} size={11} color="#DC2626" /> Del</button></td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* ── REPORTS ── */}
+              {tab === 'reports' && isAdmin && (
+                <>
+                  <div style={{ background: '#fff', borderRadius: 7, border: '1px solid #E5E7EB', padding: '10px 13px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Date Range</span>
+                    <input type="date" value={reportRange.from} onChange={e => setReportRange(r => ({ ...r, from: e.target.value }))} style={{ border: '1.5px solid #E5E7EB', borderRadius: 5, padding: '4px 7px', fontSize: 11, fontFamily: 'inherit', color: '#111', background: '#F9FAFB', outline: 'none' }} />
+                    <span style={{ color: '#9CA3AF', fontSize: 11 }}>to</span>
+                    <input type="date" value={reportRange.to} onChange={e => setReportRange(r => ({ ...r, to: e.target.value }))} style={{ border: '1.5px solid #E5E7EB', borderRadius: 5, padding: '4px 7px', fontSize: 11, fontFamily: 'inherit', color: '#111', background: '#F9FAFB', outline: 'none' }} />
+                    <button className="pbtn" onClick={fetchReport} disabled={loadingReport}>
+                      <SI d={PATHS.chartbar} size={11} color="#fff" /> {loadingReport ? 'Loading…' : 'Generate Report'}
+                    </button>
+                  </div>
+
+                  {loadingReport && <div className="pempty">Generating report…</div>}
+                  {!loadingReport && !reportData && <div className="pempty">Select a date range and click Generate Report.</div>}
+
+                  {!loadingReport && reportData && (
+                    <>
+                      <div className="rep-grid">
+                        {[
+                          { label: 'Total Revenue', value: fmtKES(reportData.total_revenue || 0), color: '#16A34A', icon: PATHS.trend },
+                          { label: 'Transactions', value: reportData.total_transactions || 0, color: '#2B5393', icon: PATHS.receipt },
+                          { label: 'Tax Collected', value: fmtKES(reportData.total_tax || 0), color: '#EA580C', icon: PATHS.percent },
+                          { label: 'Avg Sale Value', value: fmtKES(reportData.avg_sale || 0), color: '#7C3AED', icon: PATHS.chartline },
+                          { label: 'Discounts Given', value: fmtKES(reportData.total_discount || 0), color: '#DC2626', icon: PATHS.tag },
+                          { label: 'Net Profit (est.)', value: fmtKES((reportData.total_revenue || 0) - (reportData.total_tax || 0)), color: '#0891B2', icon: PATHS.package },
+                        ].map(c => (
+                          <div className="rep-card" key={c.label}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 5 }}>
+                              <div style={{ width: 26, height: 26, borderRadius: 6, background: `${c.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <SI d={c.icon} size={12} color={c.color} />
+                              </div>
+                              <span style={{ fontSize: 9, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5 }}>{c.label}</span>
+                            </div>
+                            <div style={{ fontSize: 'clamp(13px,2.5vw,19px)', fontWeight: 700, color: c.color }}>{c.value}</div>
                           </div>
                         ))}
                       </div>
-                    </div>
-                    <div className="set-section">
-                      <div style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F', marginBottom: 12 }}>Tax & Currency</div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 10 }}>
-                        <div><label className="set-label">VAT Rate (%)</label><input className="set-inp" type="number" value={settingsForm.tax_rate} onChange={e => setSettingsForm(s => ({ ...s, tax_rate: e.target.value }))} /></div>
-                        <div><label className="set-label">Currency</label>
-                          <select className="set-inp" value={settingsForm.currency} onChange={e => setSettingsForm(s => ({ ...s, currency: e.target.value }))}>
-                            <option value="KES">KES ; Kenyan Shilling</option>
-                            <option value="USD">USD ; US Dollar</option>
-                            <option value="UGX">UGX ; Ugandan Shilling</option>
-                            <option value="TZS">TZS ; Tanzanian Shilling</option>
-                          </select>
+
+                      {/* Revenue Chart */}
+                      {reportData.daily_revenue && reportData.daily_revenue.length > 0 && (
+                        <div className="chart-grid">
+                          <div className="chart-box">
+                            <div style={{ fontSize: 11, fontWeight: 700, color: '#1E3A5F', marginBottom: 10 }}>Daily Revenue</div>
+                            <BarChart
+                              data={reportData.daily_revenue.map(d => ({ label: d.date?.slice(5), value: Number(d.revenue) }))}
+                              color="#16A34A" height={130}
+                            />
+                          </div>
+                          {reportData.by_payment_method && Object.keys(reportData.by_payment_method).length > 0 && (
+                            <div className="chart-box">
+                              <div style={{ fontSize: 11, fontWeight: 700, color: '#1E3A5F', marginBottom: 10 }}>Payment Mix</div>
+                              <DonutChart
+                                data={Object.entries(reportData.by_payment_method).map(([label, value]) => ({ label, value }))}
+                                size={90}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Payment Method Chart */}
+                      {reportData.by_payment_method && Object.keys(reportData.by_payment_method).length > 0 && (
+                        <>
+                          <div className="chart-grid">
+                            <div className="chart-box">
+                              <div style={{ fontSize: 11, fontWeight: 700, color: '#1E3A5F', marginBottom: 10 }}>Revenue by Payment Method</div>
+                              <BarChart
+                                data={Object.entries(reportData.by_payment_method).map(([label, value]) => ({ label, value }))}
+                                color="#2B5393" height={130}
+                              />
+                            </div>
+                            <div className="chart-box" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: '#1E3A5F', marginBottom: 6 }}>Revenue Breakdown</div>
+                              {Object.entries(reportData.by_payment_method).map(([method, amount], i) => {
+                                const max = Math.max(...Object.values(reportData.by_payment_method))
+                                return (
+                                  <div className="bar-row" key={method}>
+                                    <span className="bar-label" style={{ textTransform: 'capitalize' }}>{method}</span>
+                                    <div className="bar-track"><div className="bar-fill" style={{ width: `${max > 0 ? (amount / max) * 100 : 0}%`, background: COLORS[i % COLORS.length] }} /></div>
+                                    <span className="bar-val">{fmtKES(amount)}</span>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Top Products */}
+                      {reportData.top_products && reportData.top_products.length > 0 && (
+                        <div className="pcard">
+                          <div className="pcard-head">
+                            <span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Top Selling Products</span>
+                          </div>
+                          <div className="chart-box" style={{ margin: 12, marginTop: 0 }}>
+                            <BarChart
+                              data={reportData.top_products.slice(0, 8).map(p => ({ label: p.product_name?.slice(0, 7), value: Number(p.total_qty || p.total_sold || 0) }))}
+                              color="#16A34A" height={120}
+                            />
+                          </div>
+                          <div className="tbl-wrap">
+                            <table className="pt">
+                              <thead><tr><th>#</th><th>Product</th><th>Qty Sold</th><th>Revenue</th></tr></thead>
+                              <tbody>
+                                {reportData.top_products.slice(0, 10).map((p, i) => (
+                                  <tr key={i}>
+                                    <td style={{ color: '#D1D5DB', fontSize: 10 }}>{i + 1}</td>
+                                    <td style={{ fontWeight: 600, color: '#1E3A5F', fontSize: 11 }}>{p.product_name}</td>
+                                    <td><span className="pbadge" style={{ background: '#EFF6FF', color: '#1E40AF', borderColor: '#BFDBFE' }}>{p.total_qty || p.total_sold || 0}</span></td>
+                                    <td style={{ fontWeight: 700, color: '#16A34A', fontSize: 11 }}>{fmtKES(p.total_revenue)}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Financial Summary */}
+                      <div className="pcard" style={{ marginTop: 12 }}>
+                        <div className="pcard-head"><span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Financial Summary</span></div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 0 }}>
+                          {[
+                            { label: 'Gross Revenue', value: fmtKES(reportData.total_revenue || 0), color: '#16A34A', bg: '#F0FDF4' },
+                            { label: 'Tax Collected (16%)', value: fmtKES(reportData.total_tax || 0), color: '#EA580C', bg: '#FFF7ED' },
+                            { label: 'Discounts Given', value: fmtKES(reportData.total_discount || 0), color: '#DC2626', bg: '#FEF2F2' },
+                            { label: 'Net Revenue (est.)', value: fmtKES((reportData.total_revenue || 0) - (reportData.total_tax || 0)), color: '#2B5393', bg: '#EFF6FF' },
+                          ].map((s, i) => (
+                            <div key={i} style={{ padding: '12px 14px', background: s.bg, borderRight: i < 3 ? '1px solid #E5E7EB' : 'none', borderBottom: '0' }}>
+                              <div style={{ fontSize: 9, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 4 }}>{s.label}</div>
+                              <div style={{ fontSize: 'clamp(13px,2.5vw,17px)', fontWeight: 700, color: s.color }}>{s.value}</div>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    </div>
-                    <div className="set-section">
-                      <div style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F', marginBottom: 12 }}>Receipt Settings</div>
-                      <label className="set-label">Footer Message</label>
-                      <input className="set-inp" type="text" value={settingsForm.receipt_footer} onChange={e => setSettingsForm(s => ({ ...s, receipt_footer: e.target.value }))} />
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <button className="pbtn" onClick={() => { setSettingsSaved(true); setTimeout(() => setSettingsSaved(false), 4000) }}>
-                        <SI d={PATHS.save} size={11} color="#fff" /> Save Settings
-                      </button>
-                    </div>
-                  </>
-                )}
+                    </>
+                  )}
+                </>
+              )}
 
+              {/* ── SETTINGS ── */}
+              {tab === 'settings' && isAdmin && (
+                <>
+                  {settingsSaved && <div style={{ background: '#F0FDF4', color: '#15803D', padding: '7px 12px', fontSize: 12, borderRadius: 7, marginBottom: 10, border: '1px solid #BBF7D0', fontWeight: 600 }}>Settings saved.</div>}
+                  <div className="set-section">
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <SI d={PATHS.building} size={13} color="#1E3A5F" /> Business Information
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 10 }}>
+                      {[{ label: 'Business Name', key: 'business_name', type: 'text' }, { label: 'Phone', key: 'phone', type: 'tel' }, { label: 'Email', key: 'email', type: 'email' }, { label: 'Address', key: 'address', type: 'text' }].map(f => (
+                        <div key={f.key}>
+                          <label className="set-label">{f.label}</label>
+                          <input className="set-inp" type={f.type} value={settingsForm[f.key]} onChange={e => setSettingsForm(s => ({ ...s, [f.key]: e.target.value }))} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="set-section">
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F', marginBottom: 12 }}>Tax & Currency</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 10 }}>
+                      <div><label className="set-label">VAT Rate (%)</label><input className="set-inp" type="number" value={settingsForm.tax_rate} onChange={e => setSettingsForm(s => ({ ...s, tax_rate: e.target.value }))} /></div>
+                      <div><label className="set-label">Currency</label>
+                        <select className="set-inp" value={settingsForm.currency} onChange={e => setSettingsForm(s => ({ ...s, currency: e.target.value }))}>
+                          <option value="KES">KES — Kenyan Shilling</option>
+                          <option value="USD">USD — US Dollar</option>
+                          <option value="UGX">UGX — Ugandan Shilling</option>
+                          <option value="TZS">TZS — Tanzanian Shilling</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="set-section">
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F', marginBottom: 12 }}>Receipt Settings</div>
+                    <label className="set-label">Footer Message</label>
+                    <input className="set-inp" type="text" value={settingsForm.receipt_footer} onChange={e => setSettingsForm(s => ({ ...s, receipt_footer: e.target.value }))} />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <button className="pbtn" onClick={() => { setSettingsSaved(true); setTimeout(() => setSettingsSaved(false), 4000) }}>
+                      <SI d={PATHS.save} size={11} color="#fff" /> Save Settings
+                    </button>
+                  </div>
+                </>
+              )}
+
+            </div>
+            <div className="pbar">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="#16A34A" /></svg>
+                Online · {bizName} · {user?.role}
               </div>
-              <div className="pbar">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="#16A34A" /></svg>
-                  Online · {bizName} · {user?.role}
-                </div>
-                <span>v1.2.0</span>
-              </div>
+              <span>v1.1.0</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Payment Modal */}
+      {/* ── Payment Modal ── */}
       <div className={`povl${showPayModal ? ' open' : ''}`} onClick={e => e.target === e.currentTarget && setShowPayModal(false)}>
         <div className="pmod" style={{ maxWidth: 800 }}>
           <div className="pmod-head">
@@ -2021,6 +1808,7 @@ export default function Pharmacy() {
           <div className="pmod-stripe" />
           <div className="pmod-body">
             <div className="pmod-grid">
+              {/* Column 1: Customer */}
               <div className="pmod-col">
                 <div style={{ fontSize: 10, fontWeight: 700, color: '#1A1A2E', marginBottom: 7, textTransform: 'uppercase' }}>Customer (Optional)</div>
                 {selectedCustomer ? (
@@ -2042,10 +1830,12 @@ export default function Pharmacy() {
                         <div><div style={{ fontSize: 11, fontWeight: 600, color: '#1A1A2E' }}>{c.name}</div><div style={{ fontSize: 9, color: '#9AA3B0' }}>{c.phone || 'No phone'}</div></div>
                       </div>
                     ))}
+                    {customers.length === 0 && <div style={{ fontSize: 11, color: '#9AA3B0' }}>No customers yet.</div>}
                   </div>
                 )}
               </div>
 
+              {/* Column 2: Payment */}
               <div className="pmod-col">
                 <div style={{ fontSize: 10, fontWeight: 700, color: '#1A1A2E', marginBottom: 7, textTransform: 'uppercase' }}>Payment</div>
                 <div className="pm-total-box">
@@ -2079,25 +1869,22 @@ export default function Pharmacy() {
                   </div>
                 )}
                 {payMethod === 'card' && <div className="pm-info"><b>Card Payment</b><br />Swipe or insert card. Confirm once approved.</div>}
-                {payMethod === 'transfer' && (
-                  <div>
-                    <div className="pm-info"><b>Bank Transfer</b><br />Confirm once received.</div>
-                    <label className="pm-label">Reference</label>
-                    <input className="pm-input" placeholder="e.g. REF123456" onChange={() => setAmountPaid(String(cartTotal))} />
-                  </div>
-                )}
-                {payMethod === 'mpesa' && (
-                  <div>
-                    <div className="pm-info"><b>M-Pesa</b><br />Ask customer to send <b>{fmtKES(cartTotal)}</b> to till number.</div>
-                    <label className="pm-label">M-Pesa Code</label>
-                    <input className="pm-input" placeholder="e.g. QGH7X2KL9P" style={{ textTransform: 'uppercase' }} onChange={() => setAmountPaid(String(cartTotal))} />
-                  </div>
-                )}
+                {payMethod === 'transfer' && <div>
+                  <div className="pm-info"><b>Bank Transfer</b><br />Confirm once received.</div>
+                  <label className="pm-label">Reference</label>
+                  <input className="pm-input" placeholder="e.g. REF123456" onChange={() => setAmountPaid(String(cartTotal))} />
+                </div>}
+                {payMethod === 'mpesa' && <div>
+                  <div className="pm-info"><b>M-Pesa</b><br />Ask customer to send <b>{fmtKES(cartTotal)}</b> to till number.</div>
+                  <label className="pm-label">M-Pesa Code</label>
+                  <input className="pm-input" placeholder="e.g. QGH7X2KL9P" style={{ textTransform: 'uppercase' }} onChange={() => setAmountPaid(String(cartTotal))} />
+                </div>}
                 <button className="btn-confirm" onClick={handleSale} disabled={saleLoading || (!amountPaid && payMethod === 'cash')}>
                   {saleLoading ? 'Processing…' : 'Confirm & Complete Sale'}
                 </button>
               </div>
 
+              {/* Column 3: Receipt Preview */}
               <div className="pmod-col">
                 <div style={{ fontSize: 10, fontWeight: 700, color: '#1A1A2E', marginBottom: 7, textTransform: 'uppercase' }}>Receipt Preview</div>
                 <div className="receipt-preview" dangerouslySetInnerHTML={{ __html: cart.length > 0 ? buildReceiptHTML(txnCount + 1, new Date(), Number(amountPaid) || cartTotal, change, payMethod, selectedCustomer?.name || null) : '<div style="text-align:center;color:#9AA3B0;padding:20px;font-size:11px;">Add items to preview</div>' }} />
@@ -2107,7 +1894,7 @@ export default function Pharmacy() {
         </div>
       </div>
 
-      {/* Receipt Modal */}
+      {/* ── Receipt Modal ── */}
       {receipt && (
         <div className="povl open" onClick={e => e.target === e.currentTarget && setReceipt(null)}>
           <div className="pmod" style={{ maxWidth: 360 }}>
@@ -2131,56 +1918,59 @@ export default function Pharmacy() {
         </div>
       )}
 
-      {/* Reprint Modal */}
-      {reprintReceipt && (
-        <div className="povl open" onClick={e => e.target === e.currentTarget && setReprintReceipt(null)}>
-          <div className="pmod" style={{ maxWidth: 360 }}>
+      {/* ── Return Modal ── */}
+      {showReturnModal && returnSale && (
+        <div className="povl open" onClick={e => e.target === e.currentTarget && setShowReturnModal(false)}>
+          <div className="pmod" style={{ maxWidth: 420 }}>
             <div className="pmod-head">
               <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <SI d={PATHS.print} size={14} color="#fff" /> Reprint Receipt
+                <SI d={PATHS.returns} size={14} color="#FCA5A5" /> Process Return
               </span>
-              <button onClick={() => setReprintReceipt(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}><SI d={PATHS.close} size={15} color="rgba(255,255,255,0.7)" /></button>
+              <button onClick={() => setShowReturnModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.7)', display: 'flex' }}><SI d={PATHS.close} size={15} color="rgba(255,255,255,0.7)" /></button>
             </div>
             <div className="pmod-stripe" />
-            <div style={{ padding: 12 }} dangerouslySetInnerHTML={{ __html: buildReprintHTML(reprintReceipt) }} />
-            <div className="rec-actions">
-              <button className="btn-rec" style={{ background: '#1E3A5F', color: '#fff' }} onClick={() => handlePrintReceipt(buildReprintHTML(reprintReceipt))}>
-                <SI d={PATHS.print} size={12} color="#fff" /> Print
-              </button>
-              <button className="btn-rec" style={{ background: '#F0F2F5', color: '#4A5568', border: '1px solid #E2E6EA' }} onClick={() => setReprintReceipt(null)}>Close</button>
+            <div className="pmod-body">
+              <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 7, padding: '10px 12px', marginBottom: 12 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#DC2626', marginBottom: 4 }}>⚠ Confirm Return</div>
+                <div style={{ fontSize: 11, color: '#374151' }}>Receipt: <b>{returnSale.receipt_number}</b></div>
+                <div style={{ fontSize: 11, color: '#374151' }}>Amount: <b>{fmtKES(returnSale.total_amount)}</b></div>
+                <div style={{ fontSize: 11, color: '#374151', marginTop: 4, color: '#DC2626' }}>This will reverse the sale and restore stock.</div>
+              </div>
+            </div>
+            <div className="pmod-foot">
+              <button className="pbtn-ghost" onClick={() => setShowReturnModal(false)}>Cancel</button>
+              <button className="pbtn-danger" onClick={handleConfirmReturn}>Confirm Return</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Admin Password Modal */}
-      {showAdminPwModal && (
-        <div className="povl open" onClick={e => e.target === e.currentTarget && setShowAdminPwModal(false)}>
+      {/* ── Admin Password Modal (for cashier return) ── */}
+      {showAdminPassModal && (
+        <div className="povl open" onClick={e => e.target === e.currentTarget && setShowAdminPassModal(false)}>
           <div className="pmod" style={{ maxWidth: 360 }}>
             <div className="pmod-head">
               <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <SI d={PATHS.lock} size={14} color="#fff" /> Admin Authorization
+                <SI d={PATHS.lock} size={14} color="#FCA5A5" /> Admin Authorization Required
               </span>
-              <button onClick={() => setShowAdminPwModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}><SI d={PATHS.close} size={15} color="rgba(255,255,255,0.7)" /></button>
+              <button onClick={() => setShowAdminPassModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.7)', display: 'flex' }}><SI d={PATHS.close} size={15} color="rgba(255,255,255,0.7)" /></button>
             </div>
             <div className="pmod-stripe" />
-            <form onSubmit={handleAdminPwSubmit} style={{ padding: 16 }}>
-              <div style={{ fontSize: 12, color: '#374151', marginBottom: 12, background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: 6, padding: '8px 10px' }}>
-                <b>Return requires admin approval.</b><br />Enter the admin password to proceed.
-              </div>
-              {adminPwError && <div style={{ background: '#FEF2F2', color: '#DC2626', padding: '6px 9px', borderRadius: 5, fontSize: 11, marginBottom: 10, border: '1px solid #FECACA' }}>{adminPwError}</div>}
+            <div className="pmod-body">
+              <div style={{ fontSize: 11, color: '#374151', marginBottom: 12 }}>Returns require admin authorization. Please enter the admin password to proceed.</div>
+              {adminPassError && <div style={{ background: '#FEF2F2', color: '#DC2626', padding: '6px 9px', borderRadius: 5, fontSize: 11, marginBottom: 10, border: '1px solid #FECACA' }}>{adminPassError}</div>}
               <label style={{ fontSize: 10, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Admin Password</label>
-              <input style={{ ...inp, marginBottom: 12 }} type="password" placeholder="Enter admin password…" value={adminPw} onChange={e => setAdminPw(e.target.value)} required autoFocus />
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" className="pbtn-ghost" onClick={() => setShowAdminPwModal(false)} style={{ flex: 1 }}>Cancel</button>
-                <button type="submit" className="pbtn" style={{ flex: 1 }}>Authorize Return</button>
-              </div>
-            </form>
+              <input style={{ ...inp, marginBottom: 4 }} type="password" placeholder="Enter admin password…" value={adminPassInput} onChange={e => setAdminPassInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAdminPassConfirm()} />
+            </div>
+            <div className="pmod-foot">
+              <button className="pbtn-ghost" onClick={() => setShowAdminPassModal(false)}>Cancel</button>
+              <button className="pbtn" onClick={handleAdminPassConfirm}>Verify & Proceed</button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Add/Edit Product Modal */}
+      {/* ── Add/Edit Product Modal ── */}
       {showAddProd && isAdmin && (
         <div className="povl open" onClick={e => e.target === e.currentTarget && setShowAddProd(false)}>
           <div className="pmod" style={{ maxWidth: 540 }}>
@@ -2196,21 +1986,9 @@ export default function Pharmacy() {
                   <label style={{ fontSize: 10, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', display: 'block', marginBottom: 3 }}>Product Name *</label>
                   <input style={inp} type="text" required placeholder="e.g. Paracetamol 500mg" value={prodForm.name} onChange={e => setProdForm(p => ({ ...p, name: e.target.value }))} />
                 </div>
-
-                <div style={{ gridColumn: '1/-1' }}>
-                  <label style={{ fontSize: 10, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', display: 'block', marginBottom: 3 }}>Category</label>
-                  <select style={inp} value={prodForm.category} onChange={e => setProdForm(p => ({ ...p, category: e.target.value }))}>
-                    <option value="">Select category…</option>
-                    {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                    <option value="__other__">Other (type below)</option>
-                  </select>
-                  {prodForm.category === '__other__' && (
-                    <input style={{ ...inp, marginTop: 5 }} placeholder="Type category name" onChange={e => setProdForm(p => ({ ...p, category: e.target.value }))} />
-                  )}
-                </div>
-
                 {[
                   { label: 'Generic Name', key: 'generic_name', type: 'text', ph: 'e.g. Acetaminophen' },
+                  { label: 'Category', key: 'category', type: 'text', ph: 'e.g. Analgesics' },
                   { label: 'Unit', key: 'unit', type: 'text', ph: 'e.g. Tablets' },
                   { label: 'Stock Qty *', key: 'stock_quantity', type: 'number', ph: '0', req: true },
                   { label: 'Reorder Level', key: 'reorder_level', type: 'number', ph: '10' },
@@ -2225,13 +2003,16 @@ export default function Pharmacy() {
                       value={prodForm[f.key]}
                       onChange={e => {
                         const val = e.target.value
-                        if (f.key === 'buying_price') setProdForm(p => ({ ...p, buying_price: val, selling_price: p.profit_margin ? calcSellingPrice(val, p.profit_margin, p.apply_tax) : p.selling_price }))
-                        else if (f.key === 'profit_margin') setProdForm(p => ({ ...p, profit_margin: val, selling_price: calcSellingPrice(p.buying_price, val, p.apply_tax) }))
-                        else setProdForm(p => ({ ...p, [f.key]: val }))
+                        if (f.key === 'buying_price') {
+                          setProdForm(p => ({ ...p, buying_price: val, selling_price: p.profit_margin ? calcSellingPrice(val, p.profit_margin, p.apply_tax) : p.selling_price }))
+                        } else if (f.key === 'profit_margin') {
+                          setProdForm(p => ({ ...p, profit_margin: val, selling_price: calcSellingPrice(p.buying_price, val, p.apply_tax) }))
+                        } else {
+                          setProdForm(p => ({ ...p, [f.key]: val }))
+                        }
                       }} />
                   </div>
                 ))}
-
                 <div>
                   <label style={{ fontSize: 10, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', display: 'block', marginBottom: 3 }}>Selling Price *</label>
                   <input style={{ ...inp, background: prodForm.profit_margin ? '#EFF6FF' : '#F9FAFB', borderColor: prodForm.profit_margin ? '#93C5FD' : '#E5E7EB' }}
@@ -2239,7 +2020,6 @@ export default function Pharmacy() {
                     onChange={e => setProdForm(p => ({ ...p, selling_price: e.target.value, profit_margin: '' }))} />
                   {prodForm.profit_margin && <span style={{ fontSize: 9, color: '#2B5393', fontWeight: 600 }}>Auto-calculated{prodForm.apply_tax ? ' + VAT' : ''}</span>}
                 </div>
-
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingTop: 18 }}>
                   <input type="checkbox" id="apply_tax" checked={prodForm.apply_tax} onChange={e => {
                     const at = e.target.checked
@@ -2247,47 +2027,6 @@ export default function Pharmacy() {
                   }} style={{ width: 13, height: 13, cursor: 'pointer' }} />
                   <label htmlFor="apply_tax" style={{ fontSize: 11, color: '#374151', cursor: 'pointer', fontWeight: 600 }}>Include 16% VAT</label>
                 </div>
-
-                {!editProd && (
-                  <div style={{ gridColumn: '1/-1', marginTop: 8 }}>
-                    <div style={{ height: 1, background: 'linear-gradient(to right, #E5E7EB, #2B5393, #E5E7EB)', marginBottom: 12, borderRadius: 1 }} />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                      <div style={{ width: 20, height: 20, borderRadius: 5, background: '#EBF2FC', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <SI d={PATHS.upload} size={11} color="#2B5393" />
-                      </div>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: '#1E3A5F' }}>Bulk Import via CSV</span>
-                      <span style={{ fontSize: 10, color: '#9CA3AF' }}>; or add products one by one above</span>
-                    </div>
-                    <button
-                      type="button"
-                      className="btn-import"
-                      disabled={csvImporting}
-                      onClick={() => csvInputRef.current?.click()}
-                    >
-                      {csvImporting ? (
-                        <>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2B5393" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
-                            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-                          </svg>
-                          Importing products…
-                        </>
-                      ) : (
-                        <>
-                          <SI d={PATHS.upload} size={14} color="#2B5393" />
-                          Click to Import CSV File
-                        </>
-                      )}
-                    </button>
-                    <div style={{ marginTop: 8, padding: '7px 10px', background: '#F8FAFF', border: '1px solid #DBEAFE', borderRadius: 6 }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: '#2B5393', marginBottom: 3 }}>Expected CSV columns:</div>
-                      <div style={{ fontSize: 10, color: '#6B7280', fontFamily: 'monospace', lineHeight: 1.6 }}>
-                        Name, Category, Buying Price, Selling Price, Stock Quantity, VAT*, Expiry Date*
-                      </div>
-                      <div style={{ fontSize: 9, color: '#9CA3AF', marginTop: 3 }}>* VAT and Expiry Date are optional ; leave blank if not applicable</div>
-                    </div>
-                    <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
-                  </div>
-                )}
               </div>
             </form>
             <div className="pmod-foot">
@@ -2298,103 +2037,7 @@ export default function Pharmacy() {
         </div>
       )}
 
-      {/* CSV Feedback Modal */}
-      {showCsvFeedback && csvFeedback && (
-        <div className="povl open" onClick={e => e.target === e.currentTarget && setShowCsvFeedback(false)}>
-          <div className="pmod" style={{ maxWidth: 440 }}>
-            <div className="pmod-head">
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <SI d={PATHS.upload} size={14} color="#fff" /> Import Results
-              </span>
-              <button onClick={() => setShowCsvFeedback(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}><SI d={PATHS.close} size={15} color="rgba(255,255,255,0.7)" /></button>
-            </div>
-            <div className="pmod-stripe" />
-            <div style={{ padding: 16 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 14 }}>
-                <div style={{ textAlign: 'center', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 8, padding: '10px 6px' }}>
-                  <div style={{ fontSize: 22, fontWeight: 700, color: '#16A34A' }}>{csvFeedback.success}</div>
-                  <div style={{ fontSize: 10, color: '#16A34A', fontWeight: 600 }}>Imported</div>
-                </div>
-                <div style={{ textAlign: 'center', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '10px 6px' }}>
-                  <div style={{ fontSize: 22, fontWeight: 700, color: '#DC2626' }}>{csvFeedback.failed}</div>
-                  <div style={{ fontSize: 10, color: '#DC2626', fontWeight: 600 }}>Failed</div>
-                </div>
-                <div style={{ textAlign: 'center', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 8, padding: '10px 6px' }}>
-                  <div style={{ fontSize: 22, fontWeight: 700, color: '#2B5393' }}>{csvFeedback.total}</div>
-                  <div style={{ fontSize: 10, color: '#2B5393', fontWeight: 600 }}>Total Rows</div>
-                </div>
-              </div>
-              {csvFeedback.success > 0 && (
-                <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 7, padding: '9px 12px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 7 }}>
-                  <SI d={PATHS.check} size={14} color="#16A34A" />
-                  <span style={{ fontSize: 12, color: '#15803D', fontWeight: 600 }}>
-                    {csvFeedback.success} product{csvFeedback.success !== 1 ? 's' : ''} imported successfully and added to your product list.
-                  </span>
-                </div>
-              )}
-              {csvFeedback.errors.length > 0 && (
-                <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 7, padding: '9px 12px' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#DC2626', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <SI d={PATHS.alert} size={12} color="#DC2626" /> Import Errors ({csvFeedback.errors.length})
-                  </div>
-                  <div style={{ maxHeight: 150, overflowY: 'auto' }}>
-                    {csvFeedback.errors.map((err, i) => (
-                      <div key={i} style={{ fontSize: 10, color: '#DC2626', padding: '3px 0', borderBottom: i < csvFeedback.errors.length - 1 ? '1px solid #FECACA' : 'none' }}>
-                        {err}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-                <button className="pbtn-ghost" style={{ flex: 1 }} onClick={() => { setShowCsvFeedback(false); setShowAddProd(false) }}>Done</button>
-                <button className="pbtn" style={{ flex: 1 }} onClick={() => { setShowCsvFeedback(false); csvInputRef.current?.click() }}>
-                  <SI d={PATHS.upload} size={11} color="#fff" /> Import Another
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add Category Modal */}
-      {showAddCat && isAdmin && (
-        <div className="povl open" onClick={e => e.target === e.currentTarget && setShowAddCat(false)}>
-          <div className="pmod" style={{ maxWidth: 360 }}>
-            <div className="pmod-head">
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>Manage Categories</span>
-              <button onClick={() => setShowAddCat(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.7)', display: 'flex' }}><SI d={PATHS.close} size={15} color="rgba(255,255,255,0.7)" /></button>
-            </div>
-            <div className="pmod-stripe" />
-            <form id="catform" onSubmit={handleAddCategory} style={{ padding: '12px 15px' }}>
-              {catError && <div style={{ background: '#FEF2F2', color: '#DC2626', padding: '6px 9px', borderRadius: 5, fontSize: 11, marginBottom: 10, border: '1px solid #FECACA' }}>{catError}</div>}
-              <label style={{ fontSize: 10, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>New Category Name *</label>
-              <input style={inp} type="text" required placeholder="e.g. Antibiotics" value={catForm.name} onChange={e => setCatForm({ name: e.target.value })} />
-              <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-                <button type="button" className="pbtn-ghost" style={{ flex: 1 }} onClick={() => setShowAddCat(false)}>Cancel</button>
-                <button type="submit" className="pbtn" style={{ flex: 1 }} disabled={catLoading}>{catLoading ? 'Adding…' : 'Add Category'}</button>
-              </div>
-              {categories.length > 0 && (
-                <div style={{ marginTop: 14, borderTop: '1px solid #E5E7EB', paddingTop: 10 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', marginBottom: 7 }}>Existing Categories</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                    {categories.map(c => (
-                      <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', background: '#F0F2F5', borderRadius: 999, fontSize: 11, color: '#1E3A5F' }}>
-                        {c.name}
-                        <button onClick={() => handleDeleteCategory(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#DC2626', display: 'flex', padding: 1 }}>
-                          <SI d={PATHS.close} size={9} color="#DC2626" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Add Cashier Modal */}
+      {/* ── Add Cashier Modal ── */}
       {showAddCash && isAdmin && (
         <div className="povl open" onClick={e => e.target === e.currentTarget && setShowAddCash(false)}>
           <div className="pmod" style={{ maxWidth: 390 }}>
@@ -2420,7 +2063,7 @@ export default function Pharmacy() {
         </div>
       )}
 
-      {/* Add/Edit Customer Modal */}
+      {/* ── Add/Edit Customer Modal ── */}
       {showAddCust && (
         <div className="povl open" onClick={e => e.target === e.currentTarget && setShowAddCust(false)}>
           <div className="pmod" style={{ maxWidth: 410 }}>
@@ -2446,7 +2089,7 @@ export default function Pharmacy() {
         </div>
       )}
 
-      {/* Add Expense Modal */}
+      {/* ── Add Expense Modal ── */}
       {showAddExp && isAdmin && (
         <div className="povl open" onClick={e => e.target === e.currentTarget && setShowAddExp(false)}>
           <div className="pmod" style={{ maxWidth: 410 }}>
@@ -2496,10 +2139,10 @@ export default function Pharmacy() {
         </div>
       )}
 
-      {/* Calculator */}
+      {/* ── Calculator (centered overlay) ── */}
       {showCalc && (
-        <div className="povl open" onClick={e => e.target === e.currentTarget && setShowCalc(false)}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+        <div className="calc-ovl" onClick={e => e.target === e.currentTarget && setShowCalc(false)}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
             <div className="calc-wrap">
               <div className="calc-display">
                 <div className="prev">{calcPrev !== null ? `${calcPrev} ${calcOp || ''}` : ''}</div>
@@ -2514,7 +2157,7 @@ export default function Pharmacy() {
                 ].map(({ k, cls }) => <button key={k} className={`calc-key ${cls}`} onClick={() => calcPress(k)}>{k}</button>)}
               </div>
             </div>
-            <button onClick={() => setShowCalc(false)} style={{ marginTop: 12, background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 6, padding: '7px 20px', color: '#fff', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>Close</button>
+            <button onClick={() => setShowCalc(false)} style={{ background: 'rgba(255,255,255,0.18)', border: 'none', borderRadius: 6, padding: '7px 24px', color: '#fff', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit', fontWeight: 600 }}>Close</button>
           </div>
         </div>
       )}
