@@ -213,7 +213,7 @@ export default function Pharmacy() {
   const bizId = user?.business_id
   const bizName = user?.business_name || 'Pharmacy'
 
-  const [tab, setTab] = useState(isAdmin ? 'dashboard' : 'pos')
+  const [tab, setTab] = useState(() => localStorage.getItem('pos_tab') || (isAdmin ? 'dashboard' : 'pos'))
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [maximized, setMaximized] = useState(false)
@@ -352,7 +352,7 @@ export default function Pharmacy() {
   const todayStr = () => new Date().toISOString().split('T')[0]
 
   const handleLogout = async () => { await logout(); navigate('/') }
-  const handleNavClick = id => { setTab(id); if (isMobile) setMobileNavOpen(false) }
+  const handleNavClick = id => { setTab(id); localStorage.setItem('pos_tab', id); if (isMobile) setMobileNavOpen(false) }
   const handleMaximize = () => {
     if (!maximized) { window.moveTo(0, 0); window.resizeTo(screen.availWidth, screen.availHeight); setMaximized(true) }
     else { window.resizeTo(1300, 800); window.moveTo((screen.availWidth - 1300) / 2, (screen.availHeight - 800) / 2); setMaximized(false) }
@@ -1088,7 +1088,7 @@ export default function Pharmacy() {
               </div>
               <div className="pnav-items">
                 {NAV.map(n => (
-                  <div key={n.id} className={`pnav-item${tab === n.id ? ' active' : ''}`} onClick={() => setTab(n.id)}>
+                  <div key={n.id} className={`pnav-item${tab === n.id ? ' active' : ''}`} onClick={() => { setTab(n.id); localStorage.setItem('pos_tab', n.id) }}>
                     <span className="pnav-icon"><SI d={PATHS[n.id] || PATHS.dashboard} size={14} color={tab === n.id ? '#fff' : '#8BAAC8'} /></span>
                     {sidebarOpen && <span>{n.label}</span>}
                   </div>
