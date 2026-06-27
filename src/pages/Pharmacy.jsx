@@ -179,7 +179,6 @@ function parseCSV(text) {
 }
 
 function mapCSVRow(row) {
-  // Map flexible column names
   const get = (...keys) => {
     for (const k of keys) {
       const found = Object.keys(row).find(rk => rk.replace(/[\s_]/g, '').toLowerCase() === k.replace(/[\s_]/g, '').toLowerCase())
@@ -229,13 +228,11 @@ export default function Pharmacy() {
   const [prodLoading, setProdLoading] = useState(false)
   const [prodError, setProdError] = useState('')
 
-  // CSV Import state
   const csvInputRef = useRef(null)
   const [csvImporting, setCsvImporting] = useState(false)
-  const [csvFeedback, setCsvFeedback] = useState(null) // {success, failed, errors}
+  const [csvFeedback, setCsvFeedback] = useState(null)
   const [showCsvFeedback, setShowCsvFeedback] = useState(false)
 
-  // Audit log state
   const [auditLogs, setAuditLogs] = useState([])
   const [loadingAudit, setLoadingAudit] = useState(false)
   const [auditFilter, setAuditFilter] = useState('all')
@@ -383,7 +380,6 @@ export default function Pharmacy() {
     try { await categoriesAPI.delete(id); fetchCategories() } catch (e) { console.error(e) }
   }
 
-  // CSV Import handler
   const handleCSVImport = async (e) => {
     const file = e.target.files[0]
     if (!file) return
@@ -393,7 +389,6 @@ export default function Pharmacy() {
       const text = await file.text()
       const rows = parseCSV(text)
       if (rows.length === 0) { alert('CSV is empty or invalid.'); setCsvImporting(false); return }
-
       let success = 0, failed = 0, errors = []
       for (let i = 0; i < rows.length; i++) {
         const mapped = mapCSVRow(rows[i])
@@ -417,11 +412,9 @@ export default function Pharmacy() {
     }
   }
 
-  // Audit log fetch (client-side from sales/products actions for demo; replace with real API)
   const fetchAuditLogs = async () => {
     setLoadingAudit(true)
     try {
-      // Try real audit API first, fallback to composing from sales
       const r = await salesAPI.listAll(bizId, '', '')
       const saleLogs = (r.data.data || []).map(s => ({
         id: `sale-${s.id}`,
@@ -854,19 +847,23 @@ export default function Pharmacy() {
         .pcard-head{padding:10px 14px;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;}
         .pstats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
         .pstat{background:#fff;border-radius:8px;border:1px solid #E5E7EB;padding:10px 12px;}
-
-        /* TABLE SCROLL ; CRITICAL FIX for mobile POS */
         .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
         .tbl-wrap::-webkit-scrollbar{height:6px;display:block;}
         .tbl-wrap::-webkit-scrollbar-thumb{background:#9CA3AF;border-radius:4px;}
         .tbl-wrap::-webkit-scrollbar-track{background:#F3F4F6;}
-
-        /* POS list specific scroll fix */
         .pos-list-outer{flex:1;overflow:hidden;background:#fff;border-radius:8px;border:1px solid #E5E7EB;display:block;min-height:0;max-height:340px;}
         .pos-list-scroll-x{overflow-x:scroll;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;scroll-behavior:smooth;}
         .pos-list-scroll-x::-webkit-scrollbar{width:4px;height:8px;display:block;}
         .pos-list-scroll-x::-webkit-scrollbar-thumb{background:#9CA3AF;border-radius:4px;}
         .pos-list-scroll-x::-webkit-scrollbar-track{background:#F3F4F6;}
+
+        /* =====================================================
+           POS TABLE HORIZONTAL SCROLL FIX — THE ONLY CHANGE
+           ===================================================== */
+        .pos-tbl-scroll{overflow-x:scroll;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;scrollbar-width:thin;scrollbar-color:#2B5393 #E5E7EB;}
+        .pos-tbl-scroll::-webkit-scrollbar{height:8px;display:block;}
+        .pos-tbl-scroll::-webkit-scrollbar-thumb{background:#2B5393;border-radius:4px;}
+        .pos-tbl-scroll::-webkit-scrollbar-track{background:#E5E7EB;border-radius:4px;}
 
         table.pt{width:100%;border-collapse:collapse;min-width:400px;}
         table.pt th{text-align:left;padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:.7px;color:#9CA3AF;text-transform:uppercase;background:#F9FAFB;border-bottom:1px solid #E5E7EB;white-space:nowrap;}
@@ -885,8 +882,6 @@ export default function Pharmacy() {
         .pbtn-orange:hover{background:#FFEDD5;}
         .pbtn-blue{padding:5px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #BFDBFE;background:#EFF6FF;color:#2B5393;transition:background .15s;display:inline-flex;align-items:center;gap:4px;}
         .pbtn-blue:hover{background:#DBEAFE;}
-
-        /* CSV Import button */
         .btn-import{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:8px;border:2px dashed #2B5393;background:linear-gradient(135deg,#EBF2FC,#F0F7FF);color:#2B5393;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s;width:100%;}
         .btn-import:hover:not(:disabled){background:linear-gradient(135deg,#DBEAFE,#EBF2FC);border-color:#1E3A5F;transform:translateY(-1px);box-shadow:0 4px 12px rgba(43,83,147,0.15);}
         .btn-import:disabled{opacity:.6;cursor:not-allowed;transform:none;}
@@ -895,7 +890,6 @@ export default function Pharmacy() {
         .csv-feedback.partial{background:#FFF7ED;border:1px solid #FED7AA;}
         .csv-feedback.failed{background:#FEF2F2;border:1px solid #FECACA;}
         .audit-badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;border:1px solid;}
-
         .pos-wrap{display:flex;gap:10px;align-items:flex-start;height:calc(100vh - 120px);}
         .pos-left{flex:1;display:flex;flex-direction:column;gap:7px;min-width:0;height:100%;overflow:hidden;}
         .pos-right{width:275px;display:flex;flex-direction:column;flex-shrink:0;height:100%;}
@@ -904,8 +898,7 @@ export default function Pharmacy() {
         .cat-tab{padding:4px 10px;white-space:nowrap;font-size:11px;font-weight:500;color:#9AA3B0;cursor:pointer;border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit;transition:all .14s;}
         .cat-tab:hover{color:#2B5393;}
         .cat-tab.active{color:#2B5393;border-bottom-color:#2B5393;font-weight:600;}
-
-        .pos-list-table{width:100%;border-collapse:collapse;min-width:650px;}
+        .pos-list-table{border-collapse:collapse;min-width:700px;width:max-content;}
         .pos-list-table thead th{background:#F9FAFB;font-size:10px;font-weight:700;color:#9AA3B0;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid #E5E7EB;text-align:left;position:sticky;top:0;z-index:2;white-space:nowrap;}
         .pos-list-table tbody tr{border-bottom:1px solid #F3F4F6;cursor:pointer;transition:background .12s;}
         .pos-list-table tbody tr:hover{background:#EBF2FC;}
@@ -1034,12 +1027,8 @@ export default function Pharmacy() {
         @media(max-width:900px){.pos-right{width:240px;}.chart-grid{grid-template-columns:1fr;}}
         @media(max-width:640px){
           html,body{overflow:auto;}
-           .pos-list-scroll-x::-webkit-scrollbar,
-           div[style*="overflowX"]::-webkit-scrollbar { height: 8px !important; display: block !important; }
-           div[style*="overflowX"]::-webkit-scrollbar-thumb { background: #2B5393 !important; border-radius: 4px !important; }
-           div[style*="overflowX"]::-webkit-scrollbar-track { background: #E5E7EB !important; }
-           .pnav-item{ font-size: 14px; padding: 10px 15px; gap: 11px; }
-           .pnav-icon svg{ width: 17px; height: 17px; }
+          .pnav-item{font-size:14px;padding:10px 15px;gap:11px;}
+          .pnav-icon svg{width:17px;height:17px;}
           .ptopbar{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;}
           .ptopbar::-webkit-scrollbar{display:none;}
           .pw{padding:0;align-items:flex-start;height:auto;min-height:100vh;}
@@ -1063,7 +1052,6 @@ export default function Pharmacy() {
         @media(max-width:480px){.pstats{grid-template-columns:1fr 1fr;}.rep-grid{grid-template-columns:1fr;}}
       `}</style>
 
-      {/* Hidden CSV file input */}
       <input ref={csvInputRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={handleCSVImport} />
 
       <div className="pw">
@@ -1265,7 +1253,7 @@ export default function Pharmacy() {
                   </>
                 )}
 
-                {/* POS */}
+                {/* ===================== POS ===================== */}
                 {tab === 'pos' && (
                   <div className="pos-wrap" style={{ height: isMobile ? 'auto' : 'calc(100vh - 168px)' }}>
                     <div className="pos-left">
@@ -1288,52 +1276,58 @@ export default function Pharmacy() {
                         </div>
                       </div>
 
-                     {posView === 'list' && (
-  <div style={{ 
-    overflowX: 'scroll', 
-    overflowY: 'auto', 
-    WebkitOverflowScrolling: 'touch', 
-    background: '#fff', 
-    borderRadius: 8, 
-    border: '1px solid #E5E7EB', 
-    maxHeight: isMobile ? '340px' : 'calc(100vh - 280px)',
-    flex: 1
-  }}>
-    <table className="pos-list-table" style={{ minWidth: '650px', width: '100%', borderCollapse: 'collapse' }}>
-      <thead>
-        <tr>
-          <th>Product</th>
-          <th>Category</th>
-          <th>Price</th>
-          <th>Stock</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        {posProducts.length === 0
-          ? <tr><td colSpan={5} style={{ textAlign: 'center', color: '#9AA3B0', padding: 18 }}>No products found</td></tr>
-          : posProducts.map(p => (
-            <tr key={p.id} className={p.stock_quantity < 1 ? 'out-row' : ''} onClick={() => addToCart(p)}>
-              <td><div style={{ fontWeight: 600, color: '#1E3A5F', fontSize: 11 }}>{p.name}</div><div style={{ fontSize: 9, color: '#9AA3B0' }}>{p.generic_name || ';'}</div></td>
-              <td style={{ fontSize: 10, color: '#9AA3B0' }}>{p.category || ';'}</td>
-              <td style={{ fontWeight: 700, color: '#2B5393', fontSize: 11 }}>{fmtKES(p.selling_price)}</td>
-              <td>
-                <span style={{ display: 'inline-flex', alignItems: 'center', padding: '1px 7px', borderRadius: 999, fontSize: 9, fontWeight: 600, background: p.stock_quantity < 1 ? '#FEF2F2' : Number(p.stock_quantity) <= Number(p.reorder_level) ? '#FFF7ED' : '#F0FDF4', color: p.stock_quantity < 1 ? '#DC2626' : Number(p.stock_quantity) <= Number(p.reorder_level) ? '#EA580C' : '#16A34A' }}>
-                  {p.stock_quantity < 1 ? 'Out' : `${p.stock_quantity} ${p.unit || ''}`}
-                </span>
-              </td>
-              <td>
-                <button disabled={p.stock_quantity < 1} onClick={e => { e.stopPropagation(); addToCart(p) }}
-                  style={{ width: 24, height: 24, borderRadius: 4, background: p.stock_quantity < 1 ? '#E2E6EA' : '#2B5393', border: 'none', cursor: p.stock_quantity < 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 'auto' }}>
-                  <SI d={PATHS.plus} size={11} color="#fff" />
-                </button>
-              </td>
-            </tr>
-          ))}
-      </tbody>
-    </table>
-  </div>
-)}
+                      {/* ===== POS LIST VIEW — FIXED HORIZONTAL SCROLL ===== */}
+                      {posView === 'list' && (
+                        <div style={{
+                          background: '#fff',
+                          borderRadius: 8,
+                          border: '1px solid #E5E7EB',
+                          maxHeight: isMobile ? '340px' : 'calc(100vh - 280px)',
+                          flex: 1,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          minHeight: 0,
+                          overflow: 'hidden',
+                        }}>
+                          {/* THIS div does ALL scrolling — horizontal AND vertical */}
+                          <div className="pos-tbl-scroll">
+                            <table className="pos-list-table">
+                              <thead>
+                                <tr>
+                                  <th style={{ minWidth: 180 }}>Product</th>
+                                  <th style={{ minWidth: 110 }}>Category</th>
+                                  <th style={{ minWidth: 110 }}>Price</th>
+                                  <th style={{ minWidth: 90 }}>Stock</th>
+                                  <th style={{ minWidth: 50 }}></th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {posProducts.length === 0
+                                  ? <tr><td colSpan={5} style={{ textAlign: 'center', color: '#9AA3B0', padding: 18 }}>No products found</td></tr>
+                                  : posProducts.map(p => (
+                                    <tr key={p.id} className={p.stock_quantity < 1 ? 'out-row' : ''} onClick={() => addToCart(p)}>
+                                      <td><div style={{ fontWeight: 600, color: '#1E3A5F', fontSize: 11 }}>{p.name}</div><div style={{ fontSize: 9, color: '#9AA3B0' }}>{p.generic_name || '—'}</div></td>
+                                      <td style={{ fontSize: 10, color: '#9AA3B0' }}>{p.category || '—'}</td>
+                                      <td style={{ fontWeight: 700, color: '#2B5393', fontSize: 11 }}>{fmtKES(p.selling_price)}</td>
+                                      <td>
+                                        <span style={{ display: 'inline-flex', alignItems: 'center', padding: '1px 7px', borderRadius: 999, fontSize: 9, fontWeight: 600, background: p.stock_quantity < 1 ? '#FEF2F2' : Number(p.stock_quantity) <= Number(p.reorder_level) ? '#FFF7ED' : '#F0FDF4', color: p.stock_quantity < 1 ? '#DC2626' : Number(p.stock_quantity) <= Number(p.reorder_level) ? '#EA580C' : '#16A34A' }}>
+                                          {p.stock_quantity < 1 ? 'Out' : `${p.stock_quantity} ${p.unit || ''}`}
+                                        </span>
+                                      </td>
+                                      <td>
+                                        <button disabled={p.stock_quantity < 1} onClick={e => { e.stopPropagation(); addToCart(p) }}
+                                          style={{ width: 24, height: 24, borderRadius: 4, background: p.stock_quantity < 1 ? '#E2E6EA' : '#2B5393', border: 'none', cursor: p.stock_quantity < 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 'auto' }}>
+                                          <SI d={PATHS.plus} size={11} color="#fff" />
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+                      {/* ===== END POS LIST VIEW FIX ===== */}
 
                       {posView === 'grid' && (
                         <div className="pos-grid-wrap">
@@ -1822,10 +1816,9 @@ export default function Pharmacy() {
                   </>
                 )}
 
-                {/* AUDIT LOG ; Admin Only */}
+                {/* AUDIT LOG */}
                 {tab === 'audit' && isAdmin && (
                   <>
-                    {/* Header stats */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 8, marginBottom: 12 }}>
                       {[
                         { label: 'Total Events', value: auditLogs.length, color: '#2B5393', bg: '#EBF2FC' },
@@ -1847,7 +1840,6 @@ export default function Pharmacy() {
                           <span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Audit History</span>
                           <span style={{ fontSize: 10, color: '#9CA3AF', marginLeft: 4 }}>Admin-only view</span>
                         </div>
-                        {/* Filter tabs */}
                         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                           {[['all', 'All'], ['sale', 'Sales'], ['return', 'Returns'], ['product', 'Products'], ['import', 'Imports'], ['expense', 'Expenses']].map(([v, l]) => (
                             <button key={v} className={`period-btn${auditFilter === v ? ' active' : ''}`} style={{ fontSize: 10, padding: '3px 8px' }} onClick={() => setAuditFilter(v)}>{l}</button>
@@ -1906,7 +1898,6 @@ export default function Pharmacy() {
                         </div>
                       )}
 
-                      {/* Audit info footer */}
                       <div style={{ padding: '8px 14px', borderTop: '1px solid #E5E7EB', background: '#FAFAFA', display: 'flex', alignItems: 'center', gap: 6 }}>
                         <SI d={PATHS.lock} size={10} color="#9CA3AF" />
                         <span style={{ fontSize: 10, color: '#9CA3AF' }}>Audit log is read-only and visible to administrators only. All system actions are automatically recorded.</span>
@@ -2209,7 +2200,6 @@ export default function Pharmacy() {
                   <label htmlFor="apply_tax" style={{ fontSize: 11, color: '#374151', cursor: 'pointer', fontWeight: 600 }}>Include 16% VAT</label>
                 </div>
 
-                {/* CSV Import Section ; spans full width, at bottom of form */}
                 {!editProd && (
                   <div style={{ gridColumn: '1/-1', marginTop: 8 }}>
                     <div style={{ height: 1, background: 'linear-gradient(to right, #E5E7EB, #2B5393, #E5E7EB)', marginBottom: 12, borderRadius: 1 }} />
@@ -2272,7 +2262,6 @@ export default function Pharmacy() {
             </div>
             <div className="pmod-stripe" />
             <div style={{ padding: 16 }}>
-              {/* Summary */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 14 }}>
                 <div style={{ textAlign: 'center', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 8, padding: '10px 6px' }}>
                   <div style={{ fontSize: 22, fontWeight: 700, color: '#16A34A' }}>{csvFeedback.success}</div>
@@ -2287,8 +2276,6 @@ export default function Pharmacy() {
                   <div style={{ fontSize: 10, color: '#2B5393', fontWeight: 600 }}>Total Rows</div>
                 </div>
               </div>
-
-              {/* Success message */}
               {csvFeedback.success > 0 && (
                 <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 7, padding: '9px 12px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 7 }}>
                   <SI d={PATHS.check} size={14} color="#16A34A" />
@@ -2297,8 +2284,6 @@ export default function Pharmacy() {
                   </span>
                 </div>
               )}
-
-              {/* Errors */}
               {csvFeedback.errors.length > 0 && (
                 <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 7, padding: '9px 12px' }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: '#DC2626', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -2313,7 +2298,6 @@ export default function Pharmacy() {
                   </div>
                 </div>
               )}
-
               <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
                 <button className="pbtn-ghost" style={{ flex: 1 }} onClick={() => { setShowCsvFeedback(false); setShowAddProd(false) }}>Done</button>
                 <button className="pbtn" style={{ flex: 1 }} onClick={() => { setShowCsvFeedback(false); csvInputRef.current?.click() }}>
