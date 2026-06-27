@@ -862,7 +862,7 @@ export default function Pharmacy() {
         .tbl-wrap::-webkit-scrollbar-track{background:#F3F4F6;}
 
         /* POS list specific scroll fix */
-        .pos-list-outer{flex:1;overflow:hidden;background:#fff;border-radius:8px;border:1px solid #E5E7EB;display:flex;flex-direction:column;min-height:0;}
+        .pos-list-outer{flex:1;overflow:hidden;background:#fff;border-radius:8px;border:1px solid #E5E7EB;display:block;min-height:0;max-height:340px;}
         .pos-list-scroll-x{overflow-x:scroll;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;scroll-behavior:smooth;}
         .pos-list-scroll-x::-webkit-scrollbar{width:4px;height:8px;display:block;}
         .pos-list-scroll-x::-webkit-scrollbar-thumb{background:#9CA3AF;border-radius:4px;}
@@ -1286,7 +1286,7 @@ export default function Pharmacy() {
 
                      {posView === 'list' && (
                  <div className="pos-list-outer">
-                  <div style={{ overflowX: 'scroll', overflowY: 'auto', flex: 1, WebkitOverflowScrolling: 'touch' }}>
+                  <div style={{ overflowX: 'scroll', overflowY: 'auto', flex: 1, height: '100%', WebkitOverflowScrolling: 'touch', display: 'block' }}>
                             <table className="pos-list-table" style={{ minWidth: '650px', width: '100%', borderCollapse: 'collapse' }}>
                               <thead>
                                 <tr>
