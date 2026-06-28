@@ -1033,7 +1033,8 @@ export default function Pharmacy() {
         @media(max-width:1100px){.pstats{grid-template-columns:repeat(2,1fr);}.rep-grid{grid-template-columns:repeat(2,1fr);}.pmod-grid{grid-template-columns:1fr 1fr;}}
         @media(max-width:900px){.pos-right{width:240px;}.chart-grid{grid-template-columns:1fr;}}
         @media(max-width:640px){
-          html,body{overflow:auto;}
+             html{overflow:hidden;}
+             body{overflow:hidden;}
            .pos-list-scroll-x::-webkit-scrollbar,
            div[style*="overflowX"]::-webkit-scrollbar { height: 8px !important; display: block !important; }
            div[style*="overflowX"]::-webkit-scrollbar-thumb { background: #2B5393 !important; border-radius: 4px !important; }
@@ -1305,6 +1306,7 @@ export default function Pharmacy() {
       overflowX: 'scroll',
       overflowY: 'auto',
       WebkitOverflowScrolling: 'touch',
+      touchAction: 'pan-x pan-y',
       flex: 1,
       // Force scrollbar to always show on all platforms
       scrollbarWidth: 'thin',        /* Firefox */
