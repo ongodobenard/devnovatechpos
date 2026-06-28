@@ -897,7 +897,7 @@ export default function Pharmacy() {
         .audit-badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;border:1px solid;}
 
         .pos-wrap{display:flex;gap:10px;align-items:flex-start;height:calc(100vh - 120px);}
-        .pos-left{flex:1;display:flex;flex-direction:column;gap:7px;min-width:0;height:100%;overflow:visible;}
+        .pos-left{flex:1;display:flex;flex-direction:column;gap:7px;min-width:0;height:100%;overflow:hidden;}
         .pos-right{width:275px;display:flex;flex-direction:column;flex-shrink:0;height:100%;}
         .cat-bar{display:flex;gap:1px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
         .cat-bar::-webkit-scrollbar{display:none;}
@@ -1289,41 +1289,71 @@ export default function Pharmacy() {
                         </div>
                       </div>
 
-                  {posView === 'list' && (
-  <div className="tbl-wrap" style={{ maxHeight: isMobile ? '340px' : 'calc(100vh - 280px)' }}>
-    <table className="pos-list-table" style={{ minWidth: 700 }}>
-      <thead>
-        <tr>
-          <th style={{ minWidth: 180 }}>Product</th>
-          <th style={{ minWidth: 110 }}>Category</th>
-          <th style={{ minWidth: 110 }}>Price</th>
-          <th style={{ minWidth: 90 }}>Stock</th>
-          <th style={{ minWidth: 50 }}></th>
-        </tr>
-      </thead>
-      <tbody>
-        {posProducts.length === 0
-          ? <tr><td colSpan={5} style={{ textAlign: 'center', color: '#9AA3B0', padding: 18 }}>No products found</td></tr>
-          : posProducts.map(p => (
-            <tr key={p.id} className={p.stock_quantity < 1 ? 'out-row' : ''} onClick={() => addToCart(p)}>
-              <td><div style={{ fontWeight: 600, color: '#1E3A5F', fontSize: 11 }}>{p.name}</div><div style={{ fontSize: 9, color: '#9AA3B0' }}>{p.generic_name || '—'}</div></td>
-              <td style={{ fontSize: 10, color: '#9AA3B0' }}>{p.category || '—'}</td>
-              <td style={{ fontWeight: 700, color: '#2B5393', fontSize: 11 }}>{fmtKES(p.selling_price)}</td>
-              <td>
-                <span style={{ display: 'inline-flex', alignItems: 'center', padding: '1px 7px', borderRadius: 999, fontSize: 9, fontWeight: 600, background: p.stock_quantity < 1 ? '#FEF2F2' : Number(p.stock_quantity) <= Number(p.reorder_level) ? '#FFF7ED' : '#F0FDF4', color: p.stock_quantity < 1 ? '#DC2626' : Number(p.stock_quantity) <= Number(p.reorder_level) ? '#EA580C' : '#16A34A' }}>
-                  {p.stock_quantity < 1 ? 'Out' : `${p.stock_quantity} ${p.unit || ''}`}
-                </span>
-              </td>
-              <td>
-                <button disabled={p.stock_quantity < 1} onClick={e => { e.stopPropagation(); addToCart(p) }}
-                  style={{ width: 24, height: 24, borderRadius: 4, background: p.stock_quantity < 1 ? '#E2E6EA' : '#2B5393', border: 'none', cursor: p.stock_quantity < 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 'auto' }}>
-                  <SI d={PATHS.plus} size={11} color="#fff" />
-                </button>
-              </td>
-            </tr>
-          ))}
-      </tbody>
-    </table>
+                     {posView === 'list' && (
+  <div style={{
+    background: '#fff',
+    borderRadius: 8,
+    border: '1px solid #E5E7EB',
+    maxHeight: isMobile ? '340px' : 'calc(100vh - 280px)',
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    minHeight: 0,
+    overflow: 'hidden',
+  }}>
+    {/* This wrapper is the ONLY element that scrolls — both X and Y */}
+    <div style={{
+      overflowX: 'scroll',
+      overflowY: 'auto',
+      WebkitOverflowScrolling: 'touch',
+      
+      flex: 1,
+      // Force scrollbar to always show on all platforms
+      scrollbarWidth: 'thin',        /* Firefox */
+      scrollbarColor: '#2B5393 #E5E7EB',
+    }}>
+      <table
+        className="pos-list-table"
+        style={{
+          /* This is the key fix: table must be wider than viewport to FORCE overflow */
+          minWidth: '700px',
+          width: 'max-content',      /* ← grow to content, never shrink */
+          borderCollapse: 'collapse',
+        }}
+      >
+        <thead>
+          <tr>
+            <th style={{ minWidth: 180 }}>Product</th>
+            <th style={{ minWidth: 110 }}>Category</th>
+            <th style={{ minWidth: 110 }}>Price</th>
+            <th style={{ minWidth: 90 }}>Stock</th>
+            <th style={{ minWidth: 50 }}></th>
+          </tr>
+        </thead>
+        <tbody>
+          {posProducts.length === 0
+            ? <tr><td colSpan={5} style={{ textAlign: 'center', color: '#9AA3B0', padding: 18 }}>No products found</td></tr>
+            : posProducts.map(p => (
+              <tr key={p.id} className={p.stock_quantity < 1 ? 'out-row' : ''} onClick={() => addToCart(p)}>
+                <td><div style={{ fontWeight: 600, color: '#1E3A5F', fontSize: 11 }}>{p.name}</div><div style={{ fontSize: 9, color: '#9AA3B0' }}>{p.generic_name || '—'}</div></td>
+                <td style={{ fontSize: 10, color: '#9AA3B0' }}>{p.category || '—'}</td>
+                <td style={{ fontWeight: 700, color: '#2B5393', fontSize: 11 }}>{fmtKES(p.selling_price)}</td>
+                <td>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', padding: '1px 7px', borderRadius: 999, fontSize: 9, fontWeight: 600, background: p.stock_quantity < 1 ? '#FEF2F2' : Number(p.stock_quantity) <= Number(p.reorder_level) ? '#FFF7ED' : '#F0FDF4', color: p.stock_quantity < 1 ? '#DC2626' : Number(p.stock_quantity) <= Number(p.reorder_level) ? '#EA580C' : '#16A34A' }}>
+                    {p.stock_quantity < 1 ? 'Out' : `${p.stock_quantity} ${p.unit || ''}`}
+                  </span>
+                </td>
+                <td>
+                  <button disabled={p.stock_quantity < 1} onClick={e => { e.stopPropagation(); addToCart(p) }}
+                    style={{ width: 24, height: 24, borderRadius: 4, background: p.stock_quantity < 1 ? '#E2E6EA' : '#2B5393', border: 'none', cursor: p.stock_quantity < 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 'auto' }}>
+                    <SI d={PATHS.plus} size={11} color="#fff" />
+                  </button>
+                </td>
+              </tr>
+            ))}
+        </tbody>
+      </table>
+    </div>
   </div>
 )}
 
