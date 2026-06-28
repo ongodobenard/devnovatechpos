@@ -1468,7 +1468,7 @@ export default function Cosmetics() {
                     {loadingProds ? <div className="pempty">Loading…</div> : filteredProds.length === 0 ? <div className="pempty">No products found.</div> : (
                       <div className="tbl-wrap">
                         <table className="pt" style={{ minWidth: 560 }}>
-                          <thead><tr><th>#</th><th>Product</th><th>Category</th><th>Buying</th><th>Selling</th><th>Stock</th><th>Expiry</th>{isAdmin && <th>Actions</th>}</tr></thead>
+                        
                           <tbody>
                             {filteredProds.map((p, i) => (
                               <tr key={p.id}>
@@ -2196,7 +2196,7 @@ export default function Cosmetics() {
                   { label: 'Stock Qty *', key: 'stock_quantity', type: 'number', ph: '0', req: true },
                   { label: 'Reorder Level', key: 'reorder_level', type: 'number', ph: '10' },
                   { label: 'Barcode', key: 'barcode', type: 'text', ph: 'Optional' },
-                  <thead><tr><th>#</th><th>Product</th><th>Category</th><th>Buying</th><th>Selling</th><th>Stock</th><th>Expiry</th>{isAdmin && <th>Actions</th>}</tr></thead>
+        
                   { label: 'Buying Price *', key: 'buying_price', type: 'number', ph: '0.00', req: true },
                   { label: 'Profit Margin (%)', key: 'profit_margin', type: 'number', ph: 'e.g. 30' },
                 ].map(f => (
