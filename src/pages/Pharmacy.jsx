@@ -1051,7 +1051,7 @@ export default function Pharmacy() {
           .pstats{grid-template-columns:repeat(2,1fr);gap:6px;}
           .pstat{padding:8px 10px;}
           .pos-wrap{flex-direction:column;height:auto;gap:8px;}
-          .pos-left{height:auto;overflow:visible;}
+          .pos-left{height:auto;overflow:hidden;min-width:0;}
           .pos-right{width:100%;position:sticky;top:8px;max-height:70vh;}
           .pos-list-outer{max-height:340px;}
           .pmod-grid{grid-template-columns:1fr;}
