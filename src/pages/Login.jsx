@@ -54,6 +54,7 @@ function Login() {
       else if (user.business_type === 'electronics') navigate('/electronics')
       else if (user.business_type === 'hardware') navigate('/hardware')
       else if (user.business_type === 'restaurant') navigate('/restaurant')
+      else if (user.business_type === 'cosmetics') navigate('/cosmetics')
     } catch (err) {
       if (err.response?.status === 401) {
         setError('Invalid email or password. Please try again.')
