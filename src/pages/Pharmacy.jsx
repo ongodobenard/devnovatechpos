@@ -158,6 +158,7 @@ function DonutChart({ data, size = 100 }) {
   )
 }
 
+// CSV Import helper
 function parseCSV(text) {
   const lines = text.trim().split('\n')
   if (lines.length < 2) return []
@@ -178,6 +179,7 @@ function parseCSV(text) {
 }
 
 function mapCSVRow(row) {
+  // Map flexible column names
   const get = (...keys) => {
     for (const k of keys) {
       const found = Object.keys(row).find(rk => rk.replace(/[\s_]/g, '').toLowerCase() === k.replace(/[\s_]/g, '').toLowerCase())
@@ -227,11 +229,13 @@ export default function Pharmacy() {
   const [prodLoading, setProdLoading] = useState(false)
   const [prodError, setProdError] = useState('')
 
+  // CSV Import state
   const csvInputRef = useRef(null)
   const [csvImporting, setCsvImporting] = useState(false)
-  const [csvFeedback, setCsvFeedback] = useState(null)
+  const [csvFeedback, setCsvFeedback] = useState(null) // {success, failed, errors}
   const [showCsvFeedback, setShowCsvFeedback] = useState(false)
 
+  // Audit log state
   const [auditLogs, setAuditLogs] = useState([])
   const [loadingAudit, setLoadingAudit] = useState(false)
   const [auditFilter, setAuditFilter] = useState('all')
@@ -379,6 +383,7 @@ export default function Pharmacy() {
     try { await categoriesAPI.delete(id); fetchCategories() } catch (e) { console.error(e) }
   }
 
+  // CSV Import handler
   const handleCSVImport = async (e) => {
     const file = e.target.files[0]
     if (!file) return
@@ -388,6 +393,7 @@ export default function Pharmacy() {
       const text = await file.text()
       const rows = parseCSV(text)
       if (rows.length === 0) { alert('CSV is empty or invalid.'); setCsvImporting(false); return }
+
       let success = 0, failed = 0, errors = []
       for (let i = 0; i < rows.length; i++) {
         const mapped = mapCSVRow(rows[i])
@@ -411,15 +417,17 @@ export default function Pharmacy() {
     }
   }
 
+  // Audit log fetch (client-side from sales/products actions for demo; replace with real API)
   const fetchAuditLogs = async () => {
     setLoadingAudit(true)
     try {
+      // Try real audit API first, fallback to composing from sales
       const r = await salesAPI.listAll(bizId, '', '')
       const saleLogs = (r.data.data || []).map(s => ({
         id: `sale-${s.id}`,
         action: 'SALE',
-        description: `Sale ${s.receipt_number} — ${fmtKES(s.total_amount)}`,
-        user: s.cashier_name || '—',
+        description: `Sale ${s.receipt_number} ; ${fmtKES(s.total_amount)}`,
+        user: s.cashier_name || ';',
         timestamp: s.created_at,
         meta: s.payment_method,
         type: 'sale'
@@ -651,10 +659,10 @@ export default function Pharmacy() {
     return `<div style="font-family:'Courier New',monospace;font-size:10px;color:#000;max-width:300px;margin:0 auto;">
       <div style="text-align:center;margin-bottom:6px;">
         <div style="font-size:14px;font-weight:700;">${bizName.toUpperCase()}</div>
-        <div style="font-size:9px;color:#555;">PHARMACY POS — REPRINT</div>
+        <div style="font-size:9px;color:#555;">PHARMACY POS ; REPRINT</div>
         <div style="font-size:9px;color:#555;">${ds} ${ts}</div>
         <div style="font-size:9px;color:#666;">Receipt: ${sale.receipt_number}</div>
-        <div style="font-size:9px;color:#666;">Cashier: ${sale.cashier_name || '—'}</div>
+        <div style="font-size:9px;color:#666;">Cashier: ${sale.cashier_name || ';'}</div>
         ${sale.customer_name ? `<div style="font-size:9px;color:#333;font-weight:700;">Customer: ${sale.customer_name}</div>` : ''}
       </div>
       <hr style="border:none;border-top:1px dashed #999;margin:5px 0;"/>
@@ -719,7 +727,8 @@ export default function Pharmacy() {
     try {
       const r = await salesAPI.return(sale.id, adminPassword, bizId)
       alert(`Return processed. KES ${Number(r.data.amount_returned || sale.total_amount).toLocaleString()} deducted from revenue.`)
-      fetchSales(); fetchTodaySales()
+      fetchSales()
+      fetchTodaySales()
       if (isAdmin) fetchStats()
     } catch (e) { alert(e.response?.data?.error || 'Return failed') }
   }
@@ -770,8 +779,14 @@ export default function Pharmacy() {
   )
   const lowStock = products.filter(p => Number(p.stock_quantity) <= Number(p.reorder_level))
   const totalExpenses = expenses.reduce((s, e) => s + Number(e.amount), 0)
+
   const inp = { border: '1.5px solid #E5E7EB', borderRadius: 6, padding: '8px 10px', fontSize: 12, fontFamily: 'inherit', color: '#111827', background: '#F9FAFB', outline: 'none', width: '100%', boxSizing: 'border-box' }
-  const expByCategory = EXP_CATS.map(cat => ({ label: cat.slice(0, 5), value: expenses.filter(e => e.category === cat).reduce((s, e) => s + Number(e.amount), 0) })).filter(d => d.value > 0)
+
+  const expByCategory = EXP_CATS.map(cat => ({
+    label: cat.slice(0, 5),
+    value: expenses.filter(e => e.category === cat).reduce((s, e) => s + Number(e.amount), 0)
+  })).filter(d => d.value > 0)
+
   const expDonutData = expByCategory.map(d => ({ label: d.label, value: d.value }))
   const todayTxnCount = todaySalesList.length
   const todayRevenue = todaySalesList.reduce((s, r) => s + Number(r.total_amount), 0)
@@ -839,10 +854,20 @@ export default function Pharmacy() {
         .pcard-head{padding:10px 14px;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;}
         .pstats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
         .pstat{background:#fff;border-radius:8px;border:1px solid #E5E7EB;padding:10px 12px;}
+
+        /* TABLE SCROLL ; CRITICAL FIX for mobile POS */
         .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
         .tbl-wrap::-webkit-scrollbar{height:6px;display:block;}
         .tbl-wrap::-webkit-scrollbar-thumb{background:#9CA3AF;border-radius:4px;}
         .tbl-wrap::-webkit-scrollbar-track{background:#F3F4F6;}
+
+        /* POS list specific scroll fix */
+        .pos-list-outer{flex:1;overflow:hidden;background:#fff;border-radius:8px;border:1px solid #E5E7EB;display:block;min-height:0;max-height:340px;}
+        .pos-list-scroll-x{overflow-x:scroll;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;scroll-behavior:smooth;}
+        .pos-list-scroll-x::-webkit-scrollbar{width:4px;height:8px;display:block;}
+        .pos-list-scroll-x::-webkit-scrollbar-thumb{background:#9CA3AF;border-radius:4px;}
+        .pos-list-scroll-x::-webkit-scrollbar-track{background:#F3F4F6;}
+
         table.pt{width:100%;border-collapse:collapse;min-width:400px;}
         table.pt th{text-align:left;padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:.7px;color:#9CA3AF;text-transform:uppercase;background:#F9FAFB;border-bottom:1px solid #E5E7EB;white-space:nowrap;}
         table.pt td{padding:8px 12px;font-size:12px;color:#374151;border-bottom:1px solid #F3F4F6;vertical-align:middle;}
@@ -860,10 +885,17 @@ export default function Pharmacy() {
         .pbtn-orange:hover{background:#FFEDD5;}
         .pbtn-blue{padding:5px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid #BFDBFE;background:#EFF6FF;color:#2B5393;transition:background .15s;display:inline-flex;align-items:center;gap:4px;}
         .pbtn-blue:hover{background:#DBEAFE;}
+
+        /* CSV Import button */
         .btn-import{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:8px;border:2px dashed #2B5393;background:linear-gradient(135deg,#EBF2FC,#F0F7FF);color:#2B5393;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s;width:100%;}
         .btn-import:hover:not(:disabled){background:linear-gradient(135deg,#DBEAFE,#EBF2FC);border-color:#1E3A5F;transform:translateY(-1px);box-shadow:0 4px 12px rgba(43,83,147,0.15);}
         .btn-import:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+        .csv-feedback{border-radius:8px;padding:12px 14px;margin-bottom:0;}
+        .csv-feedback.success{background:#F0FDF4;border:1px solid #BBF7D0;}
+        .csv-feedback.partial{background:#FFF7ED;border:1px solid #FED7AA;}
+        .csv-feedback.failed{background:#FEF2F2;border:1px solid #FECACA;}
         .audit-badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;border:1px solid;}
+
         .pos-wrap{display:flex;gap:10px;align-items:flex-start;height:calc(100vh - 120px);}
         .pos-left{flex:1;display:flex;flex-direction:column;gap:7px;min-width:0;height:100%;overflow:hidden;}
         .pos-right{width:275px;display:flex;flex-direction:column;flex-shrink:0;height:100%;}
@@ -872,7 +904,8 @@ export default function Pharmacy() {
         .cat-tab{padding:4px 10px;white-space:nowrap;font-size:11px;font-weight:500;color:#9AA3B0;cursor:pointer;border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit;transition:all .14s;}
         .cat-tab:hover{color:#2B5393;}
         .cat-tab.active{color:#2B5393;border-bottom-color:#2B5393;font-weight:600;}
-        .pos-list-table{width:100%;border-collapse:collapse;}
+
+        .pos-list-table{width:100%;border-collapse:collapse;min-width:650px;}
         .pos-list-table thead th{background:#F9FAFB;font-size:10px;font-weight:700;color:#9AA3B0;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid #E5E7EB;text-align:left;position:sticky;top:0;z-index:2;white-space:nowrap;}
         .pos-list-table tbody tr{border-bottom:1px solid #F3F4F6;cursor:pointer;transition:background .12s;}
         .pos-list-table tbody tr:hover{background:#EBF2FC;}
@@ -1001,18 +1034,26 @@ export default function Pharmacy() {
         @media(max-width:900px){.pos-right{width:240px;}.chart-grid{grid-template-columns:1fr;}}
         @media(max-width:640px){
           html,body{overflow:auto;}
+           .pos-list-scroll-x::-webkit-scrollbar,
+           div[style*="overflowX"]::-webkit-scrollbar { height: 8px !important; display: block !important; }
+           div[style*="overflowX"]::-webkit-scrollbar-thumb { background: #2B5393 !important; border-radius: 4px !important; }
+           div[style*="overflowX"]::-webkit-scrollbar-track { background: #E5E7EB !important; }
+           .pnav-item{ font-size: 14px; padding: 10px 15px; gap: 11px; }
+           .pnav-icon svg{ width: 17px; height: 17px; }
+          .ptopbar{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+          .ptopbar::-webkit-scrollbar{display:none;}
           .pw{padding:0;align-items:flex-start;height:auto;min-height:100vh;}
           .pwin{border-radius:0;box-shadow:none;height:100dvh;max-width:100%;}
           .pnav{display:none!important;}
           .mob-ovl.open{display:block;}
-          .ptopbar{height:48px;padding:0 10px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;}
-          .ptopbar::-webkit-scrollbar{display:none;}
+          .ptopbar{height:48px;padding:0 10px;}
           .pcontent{padding:8px 6px;}
           .pstats{grid-template-columns:repeat(2,1fr);gap:6px;}
           .pstat{padding:8px 10px;}
           .pos-wrap{flex-direction:column;height:auto;gap:8px;}
           .pos-left{height:auto;overflow:visible;}
           .pos-right{width:100%;position:sticky;top:8px;max-height:70vh;}
+          .pos-list-outer{max-height:340px;}
           .pmod-grid{grid-template-columns:1fr;}
           .pmod-grid .pmod-col:last-child{display:none;}
           .rep-grid{grid-template-columns:1fr 1fr;}
@@ -1022,6 +1063,7 @@ export default function Pharmacy() {
         @media(max-width:480px){.pstats{grid-template-columns:1fr 1fr;}.rep-grid{grid-template-columns:1fr;}}
       `}</style>
 
+      {/* Hidden CSV file input */}
       <input ref={csvInputRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={handleCSVImport} />
 
       <div className="pw">
@@ -1033,7 +1075,7 @@ export default function Pharmacy() {
                 <button className="pdot" style={{ background: '#FFBD2E' }} onClick={() => {}} />
                 <button className="pdot" style={{ background: '#28CA41' }} onClick={handleMaximize} />
               </div>
-              <span className="ptb-biz-name" style={{ color: '#90aac8', fontSize: 11 }}>DevnovaTech POS — {bizName}</span>
+              <span className="ptb-biz-name" style={{ color: '#90aac8', fontSize: 11 }}>DevnovaTech POS ; {bizName}</span>
             </div>
             <span style={{ color: '#aac4e0', fontSize: isMobile ? 9 : 11 }}>{fmtD(time)} | {fmtT(time)}</span>
           </div>
@@ -1113,7 +1155,7 @@ export default function Pharmacy() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                   <button onClick={() => isMobile ? setMobileNavOpen(o => !o) : setSidebarOpen(o => !o)}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280', display: 'flex', padding: 3 }}>
-                    <SI d={PATHS.menu} size={16} />
+                    <SI d={PATHS.menu} size={24} />
                   </button>
                   <span style={{ fontSize: 13, fontWeight: 700, color: '#1E3A5F', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: isMobile ? 120 : 300 }}>
                     {NAV.find(n => n.id === tab)?.label || NAV_ADMIN.find(n => n.id === tab)?.label}
@@ -1122,7 +1164,7 @@ export default function Pharmacy() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'nowrap' }}>
                   {tab === 'products' && isAdmin && <>
                     <button className="pbtn-ghost" onClick={() => setShowAddCat(true)} style={{ fontSize: 'clamp(9px,2.5vw,11px)', padding: 'clamp(3px,1vw,5px) clamp(6px,2vw,10px)' }}>
-                      <SI d={PATHS.folder} size={11} /> <span>Category</span>
+                      <SI d={PATHS.folder} size={11} /> <span className="btn-label-text">Category</span>
                     </button>
                     <button className="pbtn" onClick={openAddProd} style={{ fontSize: 'clamp(9px,2.5vw,11px)', padding: 'clamp(4px,1vw,6px) clamp(8px,2vw,12px)' }}>
                       <span>Add Product</span>
@@ -1155,11 +1197,14 @@ export default function Pharmacy() {
                         </div>
                       ))}
                     </div>
+
                     <div className="pcard" style={{ marginBottom: 12 }}>
                       <div className="pcard-head">
-                        <span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Today's Sales — {fmtD(new Date())}</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Today's Sales ; {fmtD(new Date())}</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <button className="pbtn-ghost" onClick={fetchTodaySales} style={{ fontSize: 10 }}><SI d={PATHS.refresh} size={11} color="#6B7280" /> Refresh</button>
+                          <button className="pbtn-ghost" onClick={fetchTodaySales} style={{ fontSize: 10 }}>
+                            <SI d={PATHS.refresh} size={11} color="#6B7280" /> Refresh
+                          </button>
                           <button className="pbtn" onClick={() => setTab('sales')} style={{ fontSize: 10 }}>View All →</button>
                         </div>
                       </div>
@@ -1171,7 +1216,7 @@ export default function Pharmacy() {
                               {todaySalesList.slice(0, 8).map(s => (
                                 <tr key={s.id}>
                                   <td style={{ fontFamily: 'monospace', fontSize: 10, color: '#6B7280' }}>{s.receipt_number}</td>
-                                  <td style={{ fontSize: 11 }}>{s.cashier_name || '—'}</td>
+                                  <td style={{ fontSize: 11 }}>{s.cashier_name || ';'}</td>
                                   <td style={{ fontWeight: 700, color: '#1E3A5F' }}>{fmtKES(s.total_amount)}</td>
                                   <td><span className="pbadge" style={{ background: '#EFF6FF', color: '#1E40AF', borderColor: '#BFDBFE', textTransform: 'capitalize' }}>{s.payment_method}</span></td>
                                   <td style={{ fontSize: 10, color: '#9CA3AF' }}>{new Date(s.created_at).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })}</td>
@@ -1192,6 +1237,7 @@ export default function Pharmacy() {
                         </div>
                       )}
                     </div>
+
                     {lowStock.length > 0 && (
                       <div className="pcard">
                         <div className="pcard-head">
@@ -1205,10 +1251,10 @@ export default function Pharmacy() {
                             <tbody>
                               {lowStock.map(p => (
                                 <tr key={p.id}>
-                                  <td><div style={{ fontWeight: 600, color: '#1E3A5F' }}>{p.name}</div><div style={{ fontSize: 10, color: '#9CA3AF' }}>{p.category || '—'}</div></td>
+                                  <td><div style={{ fontWeight: 600, color: '#1E3A5F' }}>{p.name}</div><div style={{ fontSize: 10, color: '#9CA3AF' }}>{p.category || ';'}</div></td>
                                   <td><span className="pbadge" style={{ background: '#FEF2F2', color: '#DC2626', borderColor: '#FECACA' }}>{p.stock_quantity}</span></td>
                                   <td>{p.reorder_level}</td>
-                                  <td>{p.unit || '—'}</td>
+                                  <td>{p.unit || ';'}</td>
                                 </tr>
                               ))}
                             </tbody>
@@ -1223,10 +1269,10 @@ export default function Pharmacy() {
                 {tab === 'pos' && (
                   <div className="pos-wrap" style={{ height: isMobile ? 'auto' : 'calc(100vh - 168px)' }}>
                     <div className="pos-left">
-                      <div style={{ background: '#fff', borderRadius: 7, border: '1px solid #E5E7EB', padding: '7px 9px', display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
-                        <div style={{ position: 'relative' }}>
+                      <div style={{ background: '#fff', borderRadius: 7, border: '1px solid #E5E7EB', padding: '7px 9px', display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0, overflow: 'visible', minWidth: 0 }}>
+                        <div style={{ position: 'relative', minWidth: 0, width: '100%' }}>
                           <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><SI d={PATHS.search} size={12} color="#9AA3B0" /></span>
-                          <input style={{ ...inp, paddingLeft: 28, fontSize: 11 }} placeholder="Search by name, generic name or barcode…" value={posSearch} onChange={e => setPosSearch(e.target.value)} />
+                          <input style={{ ...inp, paddingLeft: 28, fontSize: 11, width: '100%', minWidth: 0 }} placeholder="Search by name, generic name or barcode…" value={posSearch} onChange={e => setPosSearch(e.target.value)} />
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
                           <div className="cat-bar">
@@ -1242,63 +1288,72 @@ export default function Pharmacy() {
                         </div>
                       </div>
 
-                      {/* ── UPDATED POS LIST with bottom scrollbar on mobile ── */}
-                      {posView === 'list' && (
-                        <div style={{
-                          background: '#fff',
-                          borderRadius: 8,
-                          border: '1px solid #E5E7EB',
-                          maxHeight: isMobile ? '340px' : 'calc(100vh - 280px)',
-                          flex: isMobile ? 'none' : 1,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          minHeight: 0,
-                          overflow: 'hidden',
-                        }}>
-                          <div style={{
-                            overflowX: 'scroll',
-                            overflowY: 'auto',
-                            WebkitOverflowScrolling: 'touch',
-                            flex: 1,
-                            scrollbarWidth: 'thin',
-                            scrollbarColor: '#2B5393 #E5E7EB',
-                          }}>
-                            <table className="pos-list-table" style={{ minWidth: '700px', width: 'max-content', borderCollapse: 'collapse' }}>
-                              <thead>
-                                <tr>
-                                  <th style={{ minWidth: 180 }}>Product</th>
-                                  <th style={{ minWidth: 110 }}>Category</th>
-                                  <th style={{ minWidth: 110 }}>Price</th>
-                                  <th style={{ minWidth: 90 }}>Stock</th>
-                                  <th style={{ minWidth: 50 }}></th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {posProducts.length === 0
-                                  ? <tr><td colSpan={5} style={{ textAlign: 'center', color: '#9AA3B0', padding: 18 }}>No products found</td></tr>
-                                  : posProducts.map(p => (
-                                    <tr key={p.id} className={p.stock_quantity < 1 ? 'out-row' : ''} onClick={() => addToCart(p)}>
-                                      <td><div style={{ fontWeight: 600, color: '#1E3A5F', fontSize: 11 }}>{p.name}</div><div style={{ fontSize: 9, color: '#9AA3B0' }}>{p.generic_name || '—'}</div></td>
-                                      <td style={{ fontSize: 10, color: '#9AA3B0' }}>{p.category || '—'}</td>
-                                      <td style={{ fontWeight: 700, color: '#2B5393', fontSize: 11 }}>{fmtKES(p.selling_price)}</td>
-                                      <td>
-                                        <span style={{ display: 'inline-flex', alignItems: 'center', padding: '1px 7px', borderRadius: 999, fontSize: 9, fontWeight: 600, background: p.stock_quantity < 1 ? '#FEF2F2' : Number(p.stock_quantity) <= Number(p.reorder_level) ? '#FFF7ED' : '#F0FDF4', color: p.stock_quantity < 1 ? '#DC2626' : Number(p.stock_quantity) <= Number(p.reorder_level) ? '#EA580C' : '#16A34A' }}>
-                                          {p.stock_quantity < 1 ? 'Out' : `${p.stock_quantity} ${p.unit || ''}`}
-                                        </span>
-                                      </td>
-                                      <td>
-                                        <button disabled={p.stock_quantity < 1} onClick={e => { e.stopPropagation(); addToCart(p) }}
-                                          style={{ width: 24, height: 24, borderRadius: 4, background: p.stock_quantity < 1 ? '#E2E6EA' : '#2B5393', border: 'none', cursor: p.stock_quantity < 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 'auto' }}>
-                                          <SI d={PATHS.plus} size={11} color="#fff" />
-                                        </button>
-                                      </td>
-                                    </tr>
-                                  ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      )}
+                     {posView === 'list' && (
+  <div style={{
+    background: '#fff',
+    borderRadius: 8,
+    border: '1px solid #E5E7EB',
+    maxHeight: isMobile ? '340px' : 'calc(100vh - 280px)',
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    minHeight: 0,
+    overflow: 'hidden',
+  }}>
+    {/* This wrapper is the ONLY element that scrolls — both X and Y */}
+    <div style={{
+      overflowX: 'scroll',
+      overflowY: 'auto',
+      WebkitOverflowScrolling: 'touch',
+      flex: 1,
+      // Force scrollbar to always show on all platforms
+      scrollbarWidth: 'thin',        /* Firefox */
+      scrollbarColor: '#2B5393 #E5E7EB',
+    }}>
+      <table
+        className="pos-list-table"
+        style={{
+          /* This is the key fix: table must be wider than viewport to FORCE overflow */
+          minWidth: '700px',
+          width: 'max-content',      /* ← grow to content, never shrink */
+          borderCollapse: 'collapse',
+        }}
+      >
+        <thead>
+          <tr>
+            <th style={{ minWidth: 180 }}>Product</th>
+            <th style={{ minWidth: 110 }}>Category</th>
+            <th style={{ minWidth: 110 }}>Price</th>
+            <th style={{ minWidth: 90 }}>Stock</th>
+            <th style={{ minWidth: 50 }}></th>
+          </tr>
+        </thead>
+        <tbody>
+          {posProducts.length === 0
+            ? <tr><td colSpan={5} style={{ textAlign: 'center', color: '#9AA3B0', padding: 18 }}>No products found</td></tr>
+            : posProducts.map(p => (
+              <tr key={p.id} className={p.stock_quantity < 1 ? 'out-row' : ''} onClick={() => addToCart(p)}>
+                <td><div style={{ fontWeight: 600, color: '#1E3A5F', fontSize: 11 }}>{p.name}</div><div style={{ fontSize: 9, color: '#9AA3B0' }}>{p.generic_name || '—'}</div></td>
+                <td style={{ fontSize: 10, color: '#9AA3B0' }}>{p.category || '—'}</td>
+                <td style={{ fontWeight: 700, color: '#2B5393', fontSize: 11 }}>{fmtKES(p.selling_price)}</td>
+                <td>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', padding: '1px 7px', borderRadius: 999, fontSize: 9, fontWeight: 600, background: p.stock_quantity < 1 ? '#FEF2F2' : Number(p.stock_quantity) <= Number(p.reorder_level) ? '#FFF7ED' : '#F0FDF4', color: p.stock_quantity < 1 ? '#DC2626' : Number(p.stock_quantity) <= Number(p.reorder_level) ? '#EA580C' : '#16A34A' }}>
+                    {p.stock_quantity < 1 ? 'Out' : `${p.stock_quantity} ${p.unit || ''}`}
+                  </span>
+                </td>
+                <td>
+                  <button disabled={p.stock_quantity < 1} onClick={e => { e.stopPropagation(); addToCart(p) }}
+                    style={{ width: 24, height: 24, borderRadius: 4, background: p.stock_quantity < 1 ? '#E2E6EA' : '#2B5393', border: 'none', cursor: p.stock_quantity < 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 'auto' }}>
+                    <SI d={PATHS.plus} size={11} color="#fff" />
+                  </button>
+                </td>
+              </tr>
+            ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
 
                       {posView === 'grid' && (
                         <div className="pos-grid-wrap">
@@ -1310,7 +1365,9 @@ export default function Pharmacy() {
                                 const sl = p.stock_quantity < 1 ? 'out2' : Number(p.stock_quantity) <= Number(p.reorder_level) ? 'low' : ''
                                 return (
                                   <div key={p.id} className={`pcard2${p.stock_quantity < 1 ? ' out' : ''}`} onClick={() => addToCart(p)}>
-                                    <div className="pcard2__img" style={{ background: `${c}18` }}><SI d={PATHS.pill} size={18} color={c} /></div>
+                                    <div className="pcard2__img" style={{ background: `${c}18` }}>
+                                      <SI d={PATHS.pill} size={18} color={c} />
+                                    </div>
                                     <div className="pcard2__name">{p.name}</div>
                                     <div className="pcard2__price">{fmtKES(p.selling_price)}</div>
                                     <div className={`pcard2__stock${sl ? ' ' + sl : ''}`}>Stock: {p.stock_quantity} {p.unit || ''}</div>
@@ -1327,7 +1384,10 @@ export default function Pharmacy() {
                       <div className="cart-panel" style={{ minHeight: isMobile ? 380 : 'auto' }}>
                         <div className="cart-hdr">
                           <div className="cart-title-row">
-                            <div className="cart-title-txt"><SI d={PATHS.cart} size={12} color="#4A5568" />Cart <span className="cart-cnt">{cart.reduce((s, i) => s + i.qty, 0)}</span></div>
+                            <div className="cart-title-txt">
+                              <SI d={PATHS.cart} size={12} color="#4A5568" />
+                              Cart <span className="cart-cnt">{cart.reduce((s, i) => s + i.qty, 0)}</span>
+                            </div>
                             {cart.length > 0 && <button className="btn-clear" onClick={() => setCart([])}><SI d={PATHS.trash} size={10} color="#DC2626" /> Clear</button>}
                           </div>
                           <div style={{ display: 'flex', gap: 8, fontSize: 10, color: '#4A5568' }}>
@@ -1373,7 +1433,7 @@ export default function Pharmacy() {
                             <span className="cart-total-val">{fmtKES(cartTotal)}</span>
                           </div>
                           <div className="cart-actions">
-                            <button className="btn-hold" onClick={() => alert('Hold Sale — coming soon')}><SI d={PATHS.hold} size={11} /> Hold</button>
+                            <button className="btn-hold" onClick={() => alert('Hold Sale ; coming soon')}><SI d={PATHS.hold} size={11} /> Hold</button>
                             <button className="btn-checkout" disabled={cart.length === 0} onClick={() => setShowPayModal(true)}>Checkout <SI d={PATHS.check} size={11} color="#fff" /></button>
                           </div>
                         </div>
@@ -1382,7 +1442,9 @@ export default function Pharmacy() {
                           <div className={`qa-grid${isAdmin ? ' admin-qa' : ''}`}>
                             {QA_LIST.map((q, i) => (
                               <button key={i} className="qa-btn" onClick={q.fn}>
-                                <div className="qa-icon" style={{ background: q.bg }}><SI d={q.icon} size={11} color={q.color} /></div>
+                                <div className="qa-icon" style={{ background: q.bg }}>
+                                  <SI d={q.icon} size={11} color={q.color} />
+                                </div>
                                 <span className="qa-lbl">{q.label}</span>
                               </button>
                             ))}
@@ -1411,12 +1473,12 @@ export default function Pharmacy() {
                             {filteredProds.map((p, i) => (
                               <tr key={p.id}>
                                 <td style={{ color: '#D1D5DB', fontSize: 10 }}>{i + 1}</td>
-                                <td><div style={{ fontWeight: 600, color: '#1E3A5F', fontSize: 11 }}>{p.name}</div><div style={{ fontSize: 9, color: '#9CA3AF' }}>{p.generic_name || '—'}</div></td>
-                                <td style={{ fontSize: 11 }}>{p.category || '—'}</td>
+                                <td><div style={{ fontWeight: 600, color: '#1E3A5F', fontSize: 11 }}>{p.name}</div><div style={{ fontSize: 9, color: '#9CA3AF' }}>{p.generic_name || ';'}</div></td>
+                                <td style={{ fontSize: 11 }}>{p.category || ';'}</td>
                                 <td style={{ fontSize: 11 }}>{fmtKES(p.buying_price)}</td>
                                 <td style={{ fontWeight: 600, fontSize: 11 }}>{fmtKES(p.selling_price)}</td>
                                 <td><span className="pbadge" style={{ background: p.stock_quantity <= p.reorder_level ? '#FEF2F2' : '#F0FDF4', color: p.stock_quantity <= p.reorder_level ? '#DC2626' : '#16A34A', borderColor: p.stock_quantity <= p.reorder_level ? '#FECACA' : '#BBF7D0' }}>{p.stock_quantity} {p.unit || ''}</span></td>
-                                <td style={{ fontSize: 10, color: p.expiry_date && new Date(p.expiry_date) < new Date() ? '#DC2626' : '#374151' }}>{p.expiry_date || '—'}</td>
+                                <td style={{ fontSize: 10, color: p.expiry_date && new Date(p.expiry_date) < new Date() ? '#DC2626' : '#374151' }}>{p.expiry_date || ';'}</td>
                                 {isAdmin && (
                                   <td>
                                     <div style={{ display: 'flex', gap: 4 }}>
@@ -1439,7 +1501,7 @@ export default function Pharmacy() {
                   <div className="pcard">
                     <div className="pcard-head">
                       <span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>
-                        {isAdmin ? 'Sales History — All Cashiers' : `My Sales Today (${fmtD(new Date())})`}
+                        {isAdmin ? 'Sales History ; All Cashiers' : `My Sales Today (${fmtD(new Date())})`}
                       </span>
                       {isAdmin && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
@@ -1460,8 +1522,8 @@ export default function Pharmacy() {
                             {sales.map(s => (
                               <tr key={s.id}>
                                 <td style={{ fontFamily: 'monospace', fontSize: 10, color: '#6B7280' }}>{s.receipt_number}</td>
-                                {isAdmin && <td style={{ fontSize: 11 }}>{s.cashier_name || '—'}</td>}
-                                <td style={{ fontSize: 11, color: s.customer_name ? '#1E3A5F' : '#9CA3AF' }}>{s.customer_name || '—'}</td>
+                                {isAdmin && <td style={{ fontSize: 11 }}>{s.cashier_name || ';'}</td>}
+                                <td style={{ fontSize: 11, color: s.customer_name ? '#1E3A5F' : '#9CA3AF' }}>{s.customer_name || ';'}</td>
                                 <td style={{ fontWeight: 700, color: '#1E3A5F', fontSize: 11 }}>{fmtKES(s.total_amount)}</td>
                                 <td style={{ fontSize: 11 }}>{fmtKES(s.amount_paid)}</td>
                                 <td style={{ fontSize: 11 }}>{fmtKES(s.change_given)}</td>
@@ -1513,9 +1575,9 @@ export default function Pharmacy() {
                                     <span style={{ fontWeight: 600, color: '#1E3A5F', fontSize: 11 }}>{c.name}</span>
                                   </div>
                                 </td>
-                                <td style={{ fontSize: 11 }}>{c.phone || '—'}</td>
-                                <td style={{ fontSize: 11, color: '#6B7280' }}>{c.email || '—'}</td>
-                                <td style={{ fontSize: 11, color: '#6B7280' }}>{c.address || '—'}</td>
+                                <td style={{ fontSize: 11 }}>{c.phone || ';'}</td>
+                                <td style={{ fontSize: 11, color: '#6B7280' }}>{c.email || ';'}</td>
+                                <td style={{ fontSize: 11, color: '#6B7280' }}>{c.address || ';'}</td>
                                 <td>
                                   <div style={{ display: 'flex', gap: 4 }}>
                                     <button className="pbtn-ghost" onClick={() => openEditCust(c)}><SI d={PATHS.edit} size={11} /> Edit</button>
@@ -1595,7 +1657,7 @@ export default function Pharmacy() {
                     )}
                     <div className="pcard">
                       <div className="pcard-head">
-                        <span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Expenses — {expMonth}</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Expenses ; {expMonth}</span>
                       </div>
                       {loadingExp ? <div className="pempty">Loading…</div> : expenses.length === 0 ? (
                         <div className="pempty">No expenses for {expMonth}. <span style={{ color: '#DC2626', cursor: 'pointer', fontWeight: 600 }} onClick={() => setShowAddExp(true)}>Add first →</span></div>
@@ -1608,7 +1670,7 @@ export default function Pharmacy() {
                                 <tr key={e.id}>
                                   <td style={{ fontSize: 10 }}>{e.date}</td>
                                   <td><span className="pbadge" style={{ background: '#FFF7ED', color: '#EA580C', borderColor: '#FED7AA' }}>{e.category}</span></td>
-                                  <td style={{ color: '#6B7280', fontSize: 11 }}>{e.description || '—'}</td>
+                                  <td style={{ color: '#6B7280', fontSize: 11 }}>{e.description || ';'}</td>
                                   <td style={{ fontWeight: 700, color: '#DC2626', fontSize: 11 }}>{fmtKES(e.amount)}</td>
                                   <td style={{ fontSize: 10, textTransform: 'capitalize' }}>{e.payment_method}</td>
                                   <td><button className="pbtn-danger" onClick={() => handleDeleteExpense(e.id)}><SI d={PATHS.trash} size={11} color="#DC2626" /> Del</button></td>
@@ -1635,7 +1697,10 @@ export default function Pharmacy() {
                               const today = new Date().toISOString().split('T')[0]
                               const now = new Date()
                               if (v === 'today') { setReportRange({ from: today, to: today }) }
-                              if (v === 'week') { const mon = new Date(now); mon.setDate(now.getDate() - now.getDay() + 1); setReportRange({ from: mon.toISOString().split('T')[0], to: today }) }
+                              if (v === 'week') {
+                                const mon = new Date(now); mon.setDate(now.getDate() - now.getDay() + 1)
+                                setReportRange({ from: mon.toISOString().split('T')[0], to: today })
+                              }
                               if (v === 'month') { setReportRange({ from: today.slice(0, 8) + '01', to: today }) }
                               if (v === 'year') { setReportRange({ from: today.slice(0, 5) + '01-01', to: today }) }
                             }}>{l}
@@ -1652,8 +1717,10 @@ export default function Pharmacy() {
                         </button>
                       </div>
                     </div>
+
                     {loadingReport && <div className="pempty">Generating report…</div>}
                     {!loadingReport && !reportData && <div className="pempty">Select a period and click Generate Report.</div>}
+
                     {!loadingReport && reportData && (
                       <>
                         <div className="rep-grid">
@@ -1678,12 +1745,14 @@ export default function Pharmacy() {
                             </div>
                           ))}
                         </div>
+
                         {reportData.daily_breakdown && reportData.daily_breakdown.length > 0 && (
                           <div className="chart-box" style={{ marginBottom: 12 }}>
                             <div style={{ fontSize: 11, fontWeight: 700, color: '#1E3A5F', marginBottom: 10 }}>Daily Revenue ({reportData.from} → {reportData.to})</div>
                             <BarChart data={reportData.daily_breakdown.map(d => ({ label: d.sale_date?.slice(5), value: Math.round(Number(d.daily_revenue)) }))} color="#2B5393" height={130} />
                           </div>
                         )}
+
                         {reportData.by_payment_method && Object.keys(reportData.by_payment_method).length > 0 && (
                           <div className="chart-grid" style={{ marginBottom: 12 }}>
                             <div className="chart-box">
@@ -1696,6 +1765,7 @@ export default function Pharmacy() {
                             </div>
                           </div>
                         )}
+
                         {reportData.expenses_by_category && reportData.expenses_by_category.length > 0 && (
                           <div className="chart-grid" style={{ marginBottom: 12 }}>
                             <div className="chart-box">
@@ -1708,6 +1778,7 @@ export default function Pharmacy() {
                             </div>
                           </div>
                         )}
+
                         {reportData.by_payment_method && Object.keys(reportData.by_payment_method).length > 0 && (
                           <div className="rep-bar-wrap">
                             <div style={{ fontSize: 11, fontWeight: 700, color: '#1E3A5F', marginBottom: 10 }}>Revenue Breakdown</div>
@@ -1723,6 +1794,7 @@ export default function Pharmacy() {
                             })}
                           </div>
                         )}
+
                         {reportData.top_products && reportData.top_products.length > 0 && (
                           <div className="pcard">
                             <div className="pcard-head"><span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Top Selling Products</span></div>
@@ -1746,6 +1818,7 @@ export default function Pharmacy() {
                             </div>
                           </div>
                         )}
+
                         <div className="pcard" style={{ marginTop: 12 }}>
                           <div className="pcard-head"><span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Profit & Loss Summary</span></div>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 0 }}>
@@ -1769,9 +1842,10 @@ export default function Pharmacy() {
                   </>
                 )}
 
-                {/* AUDIT LOG */}
+                {/* AUDIT LOG ; Admin Only */}
                 {tab === 'audit' && isAdmin && (
                   <>
+                    {/* Header stats */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 8, marginBottom: 12 }}>
                       {[
                         { label: 'Total Events', value: auditLogs.length, color: '#2B5393', bg: '#EBF2FC' },
@@ -1785,6 +1859,7 @@ export default function Pharmacy() {
                         </div>
                       ))}
                     </div>
+
                     <div className="pcard">
                       <div className="pcard-head">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -1792,13 +1867,17 @@ export default function Pharmacy() {
                           <span style={{ fontSize: 12, fontWeight: 700, color: '#1E3A5F' }}>Audit History</span>
                           <span style={{ fontSize: 10, color: '#9CA3AF', marginLeft: 4 }}>Admin-only view</span>
                         </div>
+                        {/* Filter tabs */}
                         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                           {[['all', 'All'], ['sale', 'Sales'], ['return', 'Returns'], ['product', 'Products'], ['import', 'Imports'], ['expense', 'Expenses']].map(([v, l]) => (
                             <button key={v} className={`period-btn${auditFilter === v ? ' active' : ''}`} style={{ fontSize: 10, padding: '3px 8px' }} onClick={() => setAuditFilter(v)}>{l}</button>
                           ))}
                         </div>
                       </div>
-                      {loadingAudit ? <div className="pempty">Loading audit log…</div> : filteredAudit.length === 0 ? (
+
+                      {loadingAudit ? (
+                        <div className="pempty">Loading audit log…</div>
+                      ) : filteredAudit.length === 0 ? (
                         <div className="pempty">
                           <SI d={PATHS.audit} size={32} color="#E5E7EB" />
                           <div style={{ marginTop: 8 }}>No audit events found.</div>
@@ -1807,23 +1886,38 @@ export default function Pharmacy() {
                       ) : (
                         <div className="tbl-wrap">
                           <table className="pt" style={{ minWidth: 500 }}>
-                            <thead><tr><th>#</th><th>Event</th><th>Description</th><th>User</th><th>Meta</th><th>Timestamp</th></tr></thead>
+                            <thead>
+                              <tr>
+                                <th>#</th>
+                                <th>Event</th>
+                                <th>Description</th>
+                                <th>User</th>
+                                <th>Meta</th>
+                                <th>Timestamp</th>
+                              </tr>
+                            </thead>
                             <tbody>
                               {filteredAudit.map((log, i) => {
                                 const tc = auditTypeColors[log.type] || auditTypeColors.sale
                                 return (
                                   <tr key={log.id}>
                                     <td style={{ color: '#D1D5DB', fontSize: 10 }}>{i + 1}</td>
-                                    <td><span className="audit-badge" style={{ background: tc.bg, color: tc.color, borderColor: tc.border, textTransform: 'uppercase', fontSize: 9 }}>{log.action}</span></td>
+                                    <td>
+                                      <span className="audit-badge" style={{ background: tc.bg, color: tc.color, borderColor: tc.border, textTransform: 'uppercase', fontSize: 9 }}>
+                                        {log.action}
+                                      </span>
+                                    </td>
                                     <td style={{ fontSize: 11, color: '#374151', maxWidth: 220 }}>{log.description}</td>
                                     <td>
                                       <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                                         <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#EBF2FC', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, color: '#2B5393', flexShrink: 0 }}>{(log.user || 'S').charAt(0).toUpperCase()}</div>
-                                        <span style={{ fontSize: 11, color: '#1E3A5F', fontWeight: 600 }}>{log.user || '—'}</span>
+                                        <span style={{ fontSize: 11, color: '#1E3A5F', fontWeight: 600 }}>{log.user || ';'}</span>
                                       </div>
                                     </td>
-                                    <td style={{ fontSize: 10, color: '#9CA3AF', textTransform: 'capitalize' }}>{log.meta || '—'}</td>
-                                    <td style={{ fontSize: 10, color: '#6B7280', whiteSpace: 'nowrap' }}>{log.timestamp ? new Date(log.timestamp).toLocaleString('en-KE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+                                    <td style={{ fontSize: 10, color: '#9CA3AF', textTransform: 'capitalize' }}>{log.meta || ';'}</td>
+                                    <td style={{ fontSize: 10, color: '#6B7280', whiteSpace: 'nowrap' }}>
+                                      {log.timestamp ? new Date(log.timestamp).toLocaleString('en-KE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : ';'}
+                                    </td>
                                   </tr>
                                 )
                               })}
@@ -1831,6 +1925,8 @@ export default function Pharmacy() {
                           </table>
                         </div>
                       )}
+
+                      {/* Audit info footer */}
                       <div style={{ padding: '8px 14px', borderTop: '1px solid #E5E7EB', background: '#FAFAFA', display: 'flex', alignItems: 'center', gap: 6 }}>
                         <SI d={PATHS.lock} size={10} color="#9CA3AF" />
                         <span style={{ fontSize: 10, color: '#9CA3AF' }}>Audit log is read-only and visible to administrators only. All system actions are automatically recorded.</span>
@@ -1862,10 +1958,10 @@ export default function Pharmacy() {
                         <div><label className="set-label">VAT Rate (%)</label><input className="set-inp" type="number" value={settingsForm.tax_rate} onChange={e => setSettingsForm(s => ({ ...s, tax_rate: e.target.value }))} /></div>
                         <div><label className="set-label">Currency</label>
                           <select className="set-inp" value={settingsForm.currency} onChange={e => setSettingsForm(s => ({ ...s, currency: e.target.value }))}>
-                            <option value="KES">KES — Kenyan Shilling</option>
-                            <option value="USD">USD — US Dollar</option>
-                            <option value="UGX">UGX — Ugandan Shilling</option>
-                            <option value="TZS">TZS — Tanzanian Shilling</option>
+                            <option value="KES">KES ; Kenyan Shilling</option>
+                            <option value="USD">USD ; US Dollar</option>
+                            <option value="UGX">UGX ; Ugandan Shilling</option>
+                            <option value="TZS">TZS ; Tanzanian Shilling</option>
                           </select>
                         </div>
                       </div>
@@ -1930,6 +2026,7 @@ export default function Pharmacy() {
                   </div>
                 )}
               </div>
+
               <div className="pmod-col">
                 <div style={{ fontSize: 10, fontWeight: 700, color: '#1A1A2E', marginBottom: 7, textTransform: 'uppercase' }}>Payment</div>
                 <div className="pm-total-box">
@@ -1981,6 +2078,7 @@ export default function Pharmacy() {
                   {saleLoading ? 'Processing…' : 'Confirm & Complete Sale'}
                 </button>
               </div>
+
               <div className="pmod-col">
                 <div style={{ fontSize: 10, fontWeight: 700, color: '#1A1A2E', marginBottom: 7, textTransform: 'uppercase' }}>Receipt Preview</div>
                 <div className="receipt-preview" dangerouslySetInnerHTML={{ __html: cart.length > 0 ? buildReceiptHTML(txnCount + 1, new Date(), Number(amountPaid) || cartTotal, change, payMethod, selectedCustomer?.name || null) : '<div style="text-align:center;color:#9AA3B0;padding:20px;font-size:11px;">Add items to preview</div>' }} />
@@ -2079,6 +2177,7 @@ export default function Pharmacy() {
                   <label style={{ fontSize: 10, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', display: 'block', marginBottom: 3 }}>Product Name *</label>
                   <input style={inp} type="text" required placeholder="e.g. Paracetamol 500mg" value={prodForm.name} onChange={e => setProdForm(p => ({ ...p, name: e.target.value }))} />
                 </div>
+
                 <div style={{ gridColumn: '1/-1' }}>
                   <label style={{ fontSize: 10, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', display: 'block', marginBottom: 3 }}>Category</label>
                   <select style={inp} value={prodForm.category} onChange={e => setProdForm(p => ({ ...p, category: e.target.value }))}>
@@ -2090,6 +2189,7 @@ export default function Pharmacy() {
                     <input style={{ ...inp, marginTop: 5 }} placeholder="Type category name" onChange={e => setProdForm(p => ({ ...p, category: e.target.value }))} />
                   )}
                 </div>
+
                 {[
                   { label: 'Generic Name', key: 'generic_name', type: 'text', ph: 'e.g. Acetaminophen' },
                   { label: 'Unit', key: 'unit', type: 'text', ph: 'e.g. Tablets' },
@@ -2102,7 +2202,8 @@ export default function Pharmacy() {
                 ].map(f => (
                   <div key={f.key}>
                     <label style={{ fontSize: 10, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', display: 'block', marginBottom: 3 }}>{f.label}</label>
-                    <input style={inp} type={f.type} required={f.req} placeholder={f.ph} value={prodForm[f.key]}
+                    <input style={inp} type={f.type} required={f.req} placeholder={f.ph}
+                      value={prodForm[f.key]}
                       onChange={e => {
                         const val = e.target.value
                         if (f.key === 'buying_price') setProdForm(p => ({ ...p, buying_price: val, selling_price: p.profit_margin ? calcSellingPrice(val, p.profit_margin, p.apply_tax) : p.selling_price }))
@@ -2111,6 +2212,7 @@ export default function Pharmacy() {
                       }} />
                   </div>
                 ))}
+
                 <div>
                   <label style={{ fontSize: 10, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', display: 'block', marginBottom: 3 }}>Selling Price *</label>
                   <input style={{ ...inp, background: prodForm.profit_margin ? '#EFF6FF' : '#F9FAFB', borderColor: prodForm.profit_margin ? '#93C5FD' : '#E5E7EB' }}
@@ -2118,6 +2220,7 @@ export default function Pharmacy() {
                     onChange={e => setProdForm(p => ({ ...p, selling_price: e.target.value, profit_margin: '' }))} />
                   {prodForm.profit_margin && <span style={{ fontSize: 9, color: '#2B5393', fontWeight: 600 }}>Auto-calculated{prodForm.apply_tax ? ' + VAT' : ''}</span>}
                 </div>
+
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingTop: 18 }}>
                   <input type="checkbox" id="apply_tax" checked={prodForm.apply_tax} onChange={e => {
                     const at = e.target.checked
@@ -2125,6 +2228,8 @@ export default function Pharmacy() {
                   }} style={{ width: 13, height: 13, cursor: 'pointer' }} />
                   <label htmlFor="apply_tax" style={{ fontSize: 11, color: '#374151', cursor: 'pointer', fontWeight: 600 }}>Include 16% VAT</label>
                 </div>
+
+                {/* CSV Import Section ; spans full width, at bottom of form */}
                 {!editProd && (
                   <div style={{ gridColumn: '1/-1', marginTop: 8 }}>
                     <div style={{ height: 1, background: 'linear-gradient(to right, #E5E7EB, #2B5393, #E5E7EB)', marginBottom: 12, borderRadius: 1 }} />
@@ -2133,19 +2238,34 @@ export default function Pharmacy() {
                         <SI d={PATHS.upload} size={11} color="#2B5393" />
                       </div>
                       <span style={{ fontSize: 11, fontWeight: 700, color: '#1E3A5F' }}>Bulk Import via CSV</span>
-                      <span style={{ fontSize: 10, color: '#9CA3AF' }}>— or add products one by one above</span>
+                      <span style={{ fontSize: 10, color: '#9CA3AF' }}>; or add products one by one above</span>
                     </div>
-                    <button type="button" className="btn-import" disabled={csvImporting} onClick={() => csvInputRef.current?.click()}>
+                    <button
+                      type="button"
+                      className="btn-import"
+                      disabled={csvImporting}
+                      onClick={() => csvInputRef.current?.click()}
+                    >
                       {csvImporting ? (
-                        <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2B5393" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" /></svg>Importing products…</>
+                        <>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2B5393" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
+                            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                          </svg>
+                          Importing products…
+                        </>
                       ) : (
-                        <><SI d={PATHS.upload} size={14} color="#2B5393" />Click to Import CSV File</>
+                        <>
+                          <SI d={PATHS.upload} size={14} color="#2B5393" />
+                          Click to Import CSV File
+                        </>
                       )}
                     </button>
                     <div style={{ marginTop: 8, padding: '7px 10px', background: '#F8FAFF', border: '1px solid #DBEAFE', borderRadius: 6 }}>
                       <div style={{ fontSize: 10, fontWeight: 700, color: '#2B5393', marginBottom: 3 }}>Expected CSV columns:</div>
-                      <div style={{ fontSize: 10, color: '#6B7280', fontFamily: 'monospace', lineHeight: 1.6 }}>Name, Category, Buying Price, Selling Price, Stock Quantity, VAT*, Expiry Date*</div>
-                      <div style={{ fontSize: 9, color: '#9CA3AF', marginTop: 3 }}>* VAT and Expiry Date are optional — leave blank if not applicable</div>
+                      <div style={{ fontSize: 10, color: '#6B7280', fontFamily: 'monospace', lineHeight: 1.6 }}>
+                        Name, Category, Buying Price, Selling Price, Stock Quantity, VAT*, Expiry Date*
+                      </div>
+                      <div style={{ fontSize: 9, color: '#9CA3AF', marginTop: 3 }}>* VAT and Expiry Date are optional ; leave blank if not applicable</div>
                     </div>
                     <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
                   </div>
@@ -2172,6 +2292,7 @@ export default function Pharmacy() {
             </div>
             <div className="pmod-stripe" />
             <div style={{ padding: 16 }}>
+              {/* Summary */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 14 }}>
                 <div style={{ textAlign: 'center', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 8, padding: '10px 6px' }}>
                   <div style={{ fontSize: 22, fontWeight: 700, color: '#16A34A' }}>{csvFeedback.success}</div>
@@ -2186,12 +2307,18 @@ export default function Pharmacy() {
                   <div style={{ fontSize: 10, color: '#2B5393', fontWeight: 600 }}>Total Rows</div>
                 </div>
               </div>
+
+              {/* Success message */}
               {csvFeedback.success > 0 && (
                 <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 7, padding: '9px 12px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 7 }}>
                   <SI d={PATHS.check} size={14} color="#16A34A" />
-                  <span style={{ fontSize: 12, color: '#15803D', fontWeight: 600 }}>{csvFeedback.success} product{csvFeedback.success !== 1 ? 's' : ''} imported successfully.</span>
+                  <span style={{ fontSize: 12, color: '#15803D', fontWeight: 600 }}>
+                    {csvFeedback.success} product{csvFeedback.success !== 1 ? 's' : ''} imported successfully and added to your product list.
+                  </span>
                 </div>
               )}
+
+              {/* Errors */}
               {csvFeedback.errors.length > 0 && (
                 <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 7, padding: '9px 12px' }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: '#DC2626', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -2199,11 +2326,14 @@ export default function Pharmacy() {
                   </div>
                   <div style={{ maxHeight: 150, overflowY: 'auto' }}>
                     {csvFeedback.errors.map((err, i) => (
-                      <div key={i} style={{ fontSize: 10, color: '#DC2626', padding: '3px 0', borderBottom: i < csvFeedback.errors.length - 1 ? '1px solid #FECACA' : 'none' }}>{err}</div>
+                      <div key={i} style={{ fontSize: 10, color: '#DC2626', padding: '3px 0', borderBottom: i < csvFeedback.errors.length - 1 ? '1px solid #FECACA' : 'none' }}>
+                        {err}
+                      </div>
                     ))}
                   </div>
                 </div>
               )}
+
               <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
                 <button className="pbtn-ghost" style={{ flex: 1 }} onClick={() => { setShowCsvFeedback(false); setShowAddProd(false) }}>Done</button>
                 <button className="pbtn" style={{ flex: 1 }} onClick={() => { setShowCsvFeedback(false); csvInputRef.current?.click() }}>
