@@ -204,16 +204,16 @@ function mapCSVRow(row) {
   }
 }
 
-export default function Restaurant() {
+export default function Cosmetics() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
 
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin'
   const NAV = isAdmin ? NAV_ADMIN : NAV_CASHIER
   const bizId = user?.business_id
-  const bizName = user?.business_name || 'Restaurant'
+  const bizName = user?.business_name || 'Cosmetics Store'
 
-  const [tab, setTab] = useState(() => localStorage.getItem('pos_tab_rest') || (isAdmin ? 'dashboard' : 'pos'))
+  const [tab, setTab] = useState(() => localStorage.getItem('pos_tab_cos') || (isAdmin ? 'dashboard' : 'pos'))
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [maximized, setMaximized] = useState(false)
@@ -352,7 +352,7 @@ export default function Restaurant() {
   const todayStr = () => new Date().toISOString().split('T')[0]
 
   const handleLogout = async () => { await logout(); navigate('/') }
-  const handleNavClick = id => { setTab(id); localStorage.setItem('pos_tab_rest', id); if (isMobile) setMobileNavOpen(false) }
+  const handleNavClick = id => { setTab(id); localStorage.setItem('pos_tab_cos', id); if (isMobile) setMobileNavOpen(false) }
   const handleMaximize = () => {
     if (!maximized) { window.moveTo(0, 0); window.resizeTo(screen.availWidth, screen.availHeight); setMaximized(true) }
     else { window.resizeTo(1300, 800); window.moveTo((screen.availWidth - 1300) / 2, (screen.availHeight - 800) / 2); setMaximized(false) }
@@ -627,7 +627,7 @@ export default function Restaurant() {
     return `<div style="font-family:'Courier New',monospace;font-size:10px;color:#000;max-width:300px;margin:0 auto;">
       <div style="text-align:center;margin-bottom:6px;">
         <div style="font-size:14px;font-weight:700;">${bizName.toUpperCase()}</div>
-        <div style="font-size:9px;color:#555;">RESTAURANT POS</div>
+        <div style="font-size:9px;color:#555;">COSMETICS POS</div>
         <div style="font-size:9px;color:#555;">${ds} ${ts}</div>
         <div style="font-size:9px;color:#666;">Receipt: ${rno}</div>
         <div style="font-size:9px;color:#666;">Served by: ${user?.name || 'Cashier'}</div>
@@ -659,7 +659,7 @@ export default function Restaurant() {
     return `<div style="font-family:'Courier New',monospace;font-size:10px;color:#000;max-width:300px;margin:0 auto;">
       <div style="text-align:center;margin-bottom:6px;">
         <div style="font-size:14px;font-weight:700;">${bizName.toUpperCase()}</div>
-        <div style="font-size:9px;color:#555;">RESTAURANT POS - REPRINT</div>
+        <div style="font-size:9px;color:#555;">COSMETICS POS - REPRINT</div>
         <div style="font-size:9px;color:#555;">${ds} ${ts}</div>
         <div style="font-size:9px;color:#666;">Receipt: ${sale.receipt_number}</div>
         <div style="font-size:9px;color:#666;">Cashier: ${sale.cashier_name || ';'}</div>
@@ -1087,12 +1087,12 @@ export default function Restaurant() {
                 <div className="pnav-biz-av">{getInitials(bizName)}</div>
                 {sidebarOpen && <div style={{ overflow: 'hidden' }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: '#fff', lineHeight: 1.2 }}>{bizName}</div>
-                  <div style={{ fontSize: 8, letterSpacing: 2, color: '#8BAAC8' }}>RESTAURANT POS</div>
+                  <div style={{ fontSize: 8, letterSpacing: 2, color: '#8BAAC8' }}>COSMETICS POS</div>
                 </div>}
               </div>
               <div className="pnav-items">
                 {NAV.map(n => (
-                  <div key={n.id} className={`pnav-item${tab === n.id ? ' active' : ''}`} onClick={() => { setTab(n.id); localStorage.setItem('pos_tab_rest', n.id) }}>
+                  <div key={n.id} className={`pnav-item${tab === n.id ? ' active' : ''}`} onClick={() => { setTab(n.id); localStorage.setItem('pos_tab_cos', n.id) }}>
                     <span className="pnav-icon"><SI d={PATHS[n.id] || PATHS.dashboard} size={14} color={tab === n.id ? '#fff' : '#8BAAC8'} /></span>
                     {sidebarOpen && <span>{n.label}</span>}
                   </div>
@@ -1121,7 +1121,7 @@ export default function Restaurant() {
                   <div className="pnav-biz-av">{getInitials(bizName)}</div>
                   <div style={{ flex: 1, overflow: 'hidden' }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{bizName}</div>
-                    <div style={{ fontSize: 8, letterSpacing: 2, color: '#8BAAC8' }}>RESTAURANT POS</div>
+                    <div style={{ fontSize: 8, letterSpacing: 2, color: '#8BAAC8' }}>COSMETICS POS</div>
                   </div>
                   <button onClick={() => setMobileNavOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8BAAC8', display: 'flex', padding: 4 }}>
                     <SI d={PATHS.close} size={15} />
@@ -2175,7 +2175,7 @@ export default function Restaurant() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9 }}>
                 <div style={{ gridColumn: '1/-1' }}>
                   <label style={{ fontSize: 10, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', display: 'block', marginBottom: 3 }}>Product Name *</label>
-                  <input style={inp} type="text" required placeholder="e.g. Grilled Chicken" value={prodForm.name} onChange={e => setProdForm(p => ({ ...p, name: e.target.value }))} />
+                  <input style={inp} type="text" required placeholder="e.g. Nivea Body Lotion 400ml" value={prodForm.name} onChange={e => setProdForm(p => ({ ...p, name: e.target.value }))} />
                 </div>
 
                 <div style={{ gridColumn: '1/-1' }}>
@@ -2191,8 +2191,8 @@ export default function Restaurant() {
                 </div>
 
                 {[
-                  { label: 'Description', key: 'generic_name', type: 'text', ph: 'e.g. Served with fries' },
-                  { label: 'Unit', key: 'unit', type: 'text', ph: 'e.g. Tablets' },
+                  { label: 'Brand / Description', key: 'generic_name', type: 'text', ph: 'e.g. Nivea, L\'Oreal' },
+                  { label: 'Unit', key: 'unit', type: 'text', ph: 'e.g. pcs, ml, g' },
                   { label: 'Stock Qty *', key: 'stock_quantity', type: 'number', ph: '0', req: true },
                   { label: 'Reorder Level', key: 'reorder_level', type: 'number', ph: '10' },
                   { label: 'Barcode', key: 'barcode', type: 'text', ph: 'Optional' },
@@ -2357,7 +2357,7 @@ export default function Restaurant() {
             <form id="catform" onSubmit={handleAddCategory} style={{ padding: '12px 15px' }}>
               {catError && <div style={{ background: '#FEF2F2', color: '#DC2626', padding: '6px 9px', borderRadius: 5, fontSize: 11, marginBottom: 10, border: '1px solid #FECACA' }}>{catError}</div>}
               <label style={{ fontSize: 10, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>New Category Name *</label>
-              <input style={inp} type="text" required placeholder="e.g. Main Course" value={catForm.name} onChange={e => setCatForm({ name: e.target.value })} />
+              <input style={inp} type="text" required placeholder="e.g. Skin Care" value={catForm.name} onChange={e => setCatForm({ name: e.target.value })} />
               <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
                 <button type="button" className="pbtn-ghost" style={{ flex: 1 }} onClick={() => setShowAddCat(false)}>Cancel</button>
                 <button type="submit" className="pbtn" style={{ flex: 1 }} disabled={catLoading}>{catLoading ? 'Adding…' : 'Add Category'}</button>
@@ -2393,7 +2393,7 @@ export default function Restaurant() {
             <div className="pmod-stripe" />
             <form id="cashform" onSubmit={handleAddCashier} style={{ padding: '12px 15px' }}>
               {cashError && <div style={{ background: '#FEF2F2', color: '#DC2626', padding: '6px 9px', borderRadius: 5, fontSize: 11, marginBottom: 10, border: '1px solid #FECACA' }}>{cashError}</div>}
-              {[{ label: 'Full Name *', key: 'name', type: 'text', ph: 'e.g. Jane Doe', req: true }, { label: 'Email *', key: 'email', type: 'email', ph: 'jane@pharmacy.com', req: true }, { label: 'Password *', key: 'password', type: 'password', ph: 'Min 8 characters', req: true }].map(f => (
+              {[{ label: 'Full Name *', key: 'name', type: 'text', ph: 'e.g. Jane Doe', req: true }, { label: 'Email *', key: 'email', type: 'email', ph: 'jane@cosmeticsstore.com', req: true }, { label: 'Password *', key: 'password', type: 'password', ph: 'Min 8 characters', req: true }].map(f => (
                 <div key={f.key} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 10 }}>
                   <label style={{ fontSize: 10, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase' }}>{f.label}</label>
                   <input style={inp} type={f.type} required={f.req} placeholder={f.ph} value={cashForm[f.key]} onChange={e => setCashForm(p => ({ ...p, [f.key]: e.target.value }))} />

@@ -35,7 +35,8 @@ const planColors = {
 
 const typeLabel = {
   pharmacy: 'Pharmacy', electronics: 'Electronics',
-  hardware: 'Hardware', restaurant: 'Restaurant', other: 'Other'
+  hardware: 'Hardware', restaurant: 'Restaurant',
+  cosmetics: 'Cosmetics', other: 'Other'
 }
 
 const NAV = [
@@ -751,11 +752,12 @@ function SuperAdmin() {
     <div style={{ flex:'1 1 50%', display:'flex', flexDirection:'column', gap:4 }}>
       <label style={{ fontSize:10, fontWeight:700, letterSpacing:.6, color:'#6B7280', textTransform:'uppercase' }}>Business type *</label>
       <select style={inp} value={form.business_type} onChange={e => setForm(f => ({ ...f, business_type: e.target.value }))}>
-        <option value="pharmacy">Pharmacy</option>
-        <option value="electronics">Electronics</option>
-        <option value="hardware">Hardware</option>
-        <option value="restaurant">Restaurant</option>
-        <option value="other">Other</option>
+       <option value="pharmacy">Pharmacy</option>
+       <option value="electronics">Electronics</option>
+       <option value="hardware">Hardware</option>
+       <option value="restaurant">Restaurant</option>
+       <option value="cosmetics">Cosmetics</option>
+       <option value="other">Other</option>
       </select>
     </div>
   </div>

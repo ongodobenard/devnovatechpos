@@ -6,6 +6,7 @@ import Pharmacy from './pages/Pharmacy'
 import Electronics from './pages/Electronics'
 import Hardware from './pages/Hardware'
 import Restaurant from './pages/Restaurant'
+import Cosmetics from './pages/Cosmetics'
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/electronics" element={<ProtectedRoute role="admin_cashier"><Electronics /></ProtectedRoute>} />
         <Route path="/hardware" element={<ProtectedRoute role="admin_cashier"><Hardware /></ProtectedRoute>} />
         <Route path="/restaurant" element={<ProtectedRoute role="admin_cashier"><Restaurant /></ProtectedRoute>} />
+        <Route path="/cosmetics" element={<ProtectedRoute role="admin_cashier"><Cosmetics /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
